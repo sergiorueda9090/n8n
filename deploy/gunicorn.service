@@ -1,0 +1,23 @@
+# /etc/systemd/system/gunicorn-aurora.service
+# Servicio systemd que mantiene Gunicorn corriendo la app Django.
+
+[Unit]
+Description=Gunicorn - Aurora Financiera (Django)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/aurora
+# python-decouple lee automáticamente el archivo .env de WorkingDirectory.
+ExecStart=/var/www/aurora/env/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8001 \
+    --access-logfile - \
+    --error-logfile - \
+    aurora.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

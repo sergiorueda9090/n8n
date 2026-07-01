@@ -1,0 +1,5 @@
+Django==4.0
+python-decouple==3.8
+gunicorn==22.0.0
+# Solo si usas PostgreSQL/Supabase como base de datos en producción:
+psycopg2-binary==2.9.9

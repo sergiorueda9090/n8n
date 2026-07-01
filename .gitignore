@@ -1,0 +1,39 @@
+# === Secretos (NUNCA subir) ===
+.env
+n8n-bedrock-ocr_accessKeys.csv
+*.pem
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+env/
+venv/
+.venv/
+*.egg-info/
+
+# === Django ===
+db.sqlite3
+# Estáticos RECOPILADOS por collectstatic (STATIC_ROOT). La carpeta fuente
+# `static/` SÍ se versiona (contiene static/img/ con las imágenes del sitio).
+/staticfiles/
+/media/
+
+# === Media pesada duplicada en la raíz (las que usa el sitio ya están en static/img/) ===
+/Hero.png
+/aurorita.png
+/cliente_1.png
+/cliente_2.png
+/cliente_3.png
+/Onboarding.jpeg
+/toda_tu_cooperativa.jpeg
+/Captura*.png
+
+# === Documentos y datos que no forman parte de la app ===
+*.docx
+/0_Super_Agente_Orquestador_Final.json
+
+# === Sistema ===
+.DS_Store
+Thumbs.db
+*.log

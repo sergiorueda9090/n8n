@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Aurora Financiera | Tu cooperativa, ahora 24/7{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Aurora Financiera, cooperativa de ahorro y crédito con 18 años de trayectoria y 250.000 asociados. Atención digital 24/7, créditos, ahorro y CDT.">
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================================
+     HERO
+     ========================================================= -->
+<header class="af-hero" id="inicio">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <div class="af-hero-content">
+          <p class="af-eyebrow" style="color:var(--af-accent);">Cooperativa de ahorro y crédito</p>
+          <h1>Tu cooperativa, <span>ahora 24/7</span></h1>
+          <p class="af-hero-sub">Resuelve tus trámites, pide créditos y administra tus ahorros desde cualquier lugar. Atención digital inmediata, sin filas ni horarios, con el respaldo de 18 años de solidez.</p>
+          <div class="d-flex flex-wrap gap-3 justify-content-lg-start justify-content-center">
+            <a href="#contacto" class="af-btn af-btn-primary">
+              Abre tu cuenta en minutos <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="#productos" class="af-btn af-btn-outline">Conoce más</a>
+          </div>
+          <div class="af-hero-badges justify-content-lg-start">
+            <span><i class="bi bi-patch-check-fill"></i> Vigilada por la Supersolidaria</span>
+            <span><i class="bi bi-lock-fill"></i> Datos protegidos</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 mt-5 mt-lg-0">
+        <div class="af-hero-media position-relative">
+          <div class="af-img-frame">
+            <img src="{% static 'img/Hero.png' %}" alt="Asociada de Aurora Financiera usando la banca digital desde su celular" loading="lazy">
+          </div>
+          <div class="af-hero-floating-card d-none d-sm-flex">
+            <div class="af-icon-circle"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+              <strong>+250.000</strong>
+              <span>asociados confían en nosotros</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- =========================================================
+     INDICADORES DE CONFIANZA
+     ========================================================= -->
+<section class="af-trust af-section py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number"><span class="af-counter" data-target="250000">0</span><span class="af-accent-text">+</span></div>
+          <p class="af-counter-label">Asociados</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number"><span class="af-counter" data-target="18">0</span></div>
+          <p class="af-counter-label">Años de trayectoria</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number"><span class="af-counter" data-target="14">0</span></div>
+          <p class="af-counter-label">Ciudades en Colombia</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number">24<span class="af-accent-text">/7</span></div>
+          <p class="af-counter-label">Atención digital</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PRODUCTOS
+     ========================================================= -->
+<section class="af-section af-bg-light" id="productos">
+  <div class="container">
+    <div class="af-section-head">
+      <p class="af-eyebrow">Productos</p>
+      <h2 class="af-section-title">Soluciones financieras para cada etapa de tu vida</h2>
+      <p class="af-lead">Diseñados para asociados como tú, con tasas justas y procesos 100% digitales.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-cash-coin"></i></div>
+          <h3>Crédito de consumo</h3>
+          <p>Financia tus proyectos personales con desembolso rápido y cuotas a tu medida.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-house-heart"></i></div>
+          <h3>Crédito de vivienda</h3>
+          <p>Cumple el sueño de tu casa propia con plazos flexibles y acompañamiento experto.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-piggy-bank"></i></div>
+          <h3>Ahorro programado</h3>
+          <p>Construye tus metas paso a paso con aportes automáticos y rendimientos atractivos.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-graph-up-arrow"></i></div>
+          <h3>CDT</h3>
+          <p>Haz crecer tu dinero con un certificado de depósito a término con tasas preferenciales.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     BENEFICIOS DEL CANAL DIGITAL
+     ========================================================= -->
+<section class="af-section" id="beneficios">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 order-lg-2">
+        <div class="af-section-head mb-4">
+          <p class="af-eyebrow">Canal digital</p>
+          <h2 class="af-section-title">Toda tu cooperativa en la palma de tu mano</h2>
+        </div>
+
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-clock-history"></i></div>
+          <div>
+            <h3>Autoservicio 24/7</h3>
+            <p>Consulta saldos, certificados y haz transacciones a cualquier hora, todos los días del año.</p>
+          </div>
+        </div>
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-whatsapp"></i></div>
+          <div>
+            <h3>Pagos por WhatsApp</h3>
+            <p>Paga tus cuotas y aportes en segundos, desde el chat que ya usas todos los días.</p>
+          </div>
+        </div>
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-phone"></i></div>
+          <div>
+            <h3>Onboarding digital en minutos</h3>
+            <p>Hazte asociado sin papeleo ni filas: validamos tu identidad de forma segura y rápida.</p>
+          </div>
+        </div>
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-bell"></i></div>
+          <div>
+            <h3>Recordatorios amables</h3>
+            <p>Te avisamos antes de cada vencimiento para que nunca pierdas tus beneficios como asociado.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 order-lg-1">
+        <div class="af-benefits-media">
+          <img src="{% static 'img/Onboarding.jpeg' %}" alt="Asociado de Aurora Financiera realizando un pago digital desde su celular" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     CÓMO FUNCIONA
+     ========================================================= -->
+<section class="af-section af-bg-light">
+  <div class="container">
+    <div class="af-section-head mx-auto text-center">
+      <p class="af-eyebrow">Proceso</p>
+      <h2 class="af-section-title">Cómo funciona</h2>
+      <p class="af-lead">Tres pasos sencillos para empezar a disfrutar tu cooperativa digital.</p>
+    </div>
+    <div class="row af-steps">
+      <div class="col-md-4 position-relative">
+        <div class="af-step">
+          <div class="af-step-number">1</div>
+          <h3>Regístrate</h3>
+          <p>Completa tus datos básicos desde la web o la app en menos de 5 minutos.</p>
+          <div class="af-step-connector"></div>
+        </div>
+      </div>
+      <div class="col-md-4 position-relative">
+        <div class="af-step">
+          <div class="af-step-number">2</div>
+          <h3>Verifica tu identidad</h3>
+          <p>Confirma quién eres con un proceso seguro y validado, sin necesidad de ir a una oficina.</p>
+          <div class="af-step-connector"></div>
+        </div>
+      </div>
+      <div class="col-md-4 position-relative">
+        <div class="af-step">
+          <div class="af-step-number">3</div>
+          <h3>Opera desde tu celular</h3>
+          <p>Accede a tus productos, paga y haz seguimiento a tus ahorros cuando lo necesites.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     TESTIMONIOS
+     ========================================================= -->
+<section class="af-section" id="asociados">
+  <div class="af-section-head text-center mx-auto container">
+    <p class="af-eyebrow">Asociados</p>
+    <h2 class="af-section-title">Lo que dicen nuestros asociados</h2>
+  </div>
+
+  <div class="container">
+    <div id="afCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#afCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Testimonio 1"></button>
+        <button type="button" data-bs-target="#afCarousel" data-bs-slide-to="1" aria-label="Testimonio 2"></button>
+        <button type="button" data-bs-target="#afCarousel" data-bs-slide-to="2" aria-label="Testimonio 3"></button>
+      </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="af-testimonial-card">
+            <i class="bi bi-quote"></i>
+            <img src="{% static 'img/cliente_1.png' %}" alt="Foto de María Fernanda Ortiz, asociada de Aurora Financiera" class="af-testimonial-avatar" loading="lazy">
+            <p class="af-testimonial-quote">Pedí mi crédito de consumo desde el celular y en menos de un día ya tenía el dinero en mi cuenta. Nunca había sido tan fácil.</p>
+            <p class="af-testimonial-name">María Fernanda Ortiz</p>
+            <p class="af-testimonial-role">Asociada desde 2016 · Medellín</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="af-testimonial-card">
+            <i class="bi bi-quote"></i>
+            <img src="{% static 'img/cliente_2.png' %}" alt="Foto de Jorge Hernán Restrepo, asociado de Aurora Financiera" class="af-testimonial-avatar" loading="lazy">
+            <p class="af-testimonial-quote">Pago mis cuotas por WhatsApp mientras voy en el bus. Aurora entendió que necesitamos rapidez sin perder la cercanía de siempre.</p>
+            <p class="af-testimonial-name">Jorge Hernán Restrepo</p>
+            <p class="af-testimonial-role">Asociado desde 2009 · Bogotá</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="af-testimonial-card">
+            <i class="bi bi-quote"></i>
+            <img src="{% static 'img/cliente_3.png' %}" alt="Foto de Luz Dary Cardona, asociada de Aurora Financiera" class="af-testimonial-avatar" loading="lazy">
+            <p class="af-testimonial-quote">Abrí mi ahorro programado en línea y los recordatorios me han ayudado a no fallar ni un mes. Hoy ya casi cumplo mi meta.</p>
+            <p class="af-testimonial-name">Luz Dary Cardona</p>
+            <p class="af-testimonial-role">Asociada desde 2021 · Cali</p>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#afCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#afCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     CTA FINAL
+     ========================================================= -->
+<section class="af-section pt-0">
+  <div class="container">
+    <div class="af-cta-final">
+      <h2>Empieza a vivir tu cooperativa 24/7</h2>
+      <p>Únete a los más de 250.000 asociados que ya disfrutan de una experiencia financiera digital, segura y cercana.</p>
+      <a href="#contacto" class="af-btn af-btn-primary">Abre tu cuenta en minutos <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurora Financiera | Tu cooperativa, ahora 24/7</title>
+<meta name="description" content="Aurora Financiera, cooperativa de ahorro y crédito con 18 años de trayectoria y 250.000 asociados. Atención digital 24/7, créditos, ahorro y CDT.">
+
+<!-- Google Fonts: Poppins para títulos, Inter para texto -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5 CSS (CDN) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons (CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+  /* =========================================================
+     1. VARIABLES Y BASE
+     ========================================================= */
+  :root{
+    --af-primary:#0B3D6B;
+    --af-primary-dark:#082c4f;
+    --af-primary-soft:#e7eef5;
+    --af-accent:#1BB8A6;
+    --af-accent-dark:#149384;
+    --af-bg-light:#F7FAFC;
+    --af-gray:#5C6B7A;
+    --af-gray-light:#9AA7B4;
+    --af-white:#FFFFFF;
+    --af-radius-lg:24px;
+    --af-radius-md:16px;
+    --af-radius-sm:10px;
+    --af-shadow-sm:0 4px 14px rgba(11,61,107,0.08);
+    --af-shadow-md:0 12px 30px rgba(11,61,107,0.12);
+    --af-shadow-lg:0 20px 50px rgba(11,61,107,0.18);
+    --af-transition:all .3s ease;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *, *::before, *::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  body{
+    font-family:'Inter', sans-serif;
+    color:#26313D;
+    background-color:var(--af-white);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3,h4,h5,.af-display{
+    font-family:'Poppins', sans-serif;
+    font-weight:700;
+    color:var(--af-primary);
+  }
+
+  a{ text-decoration:none; }
+
+  /* Foco visible accesible para navegación por teclado */
+  a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visible{
+    outline:3px solid var(--af-accent);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  .af-section{ padding:96px 0; }
+  .af-eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    font-size:.78rem;
+    font-weight:600;
+    color:var(--af-accent-dark);
+  }
+  .af-lead{ color:var(--af-gray); font-size:1.08rem; }
+
+  .af-btn{
+    font-family:'Poppins', sans-serif;
+    font-weight:600;
+    border-radius:50px;
+    padding:.85rem 1.9rem;
+    border:2px solid transparent;
+    transition:var(--af-transition);
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+  }
+  .af-btn-primary{ background-color:var(--af-accent); color:var(--af-white); }
+  .af-btn-primary:hover{ background-color:var(--af-accent-dark); color:var(--af-white); transform:translateY(-2px); box-shadow:var(--af-shadow-md); }
+  .af-btn-outline{ background-color:transparent; color:var(--af-white); border-color:rgba(255,255,255,.6); }
+  .af-btn-outline:hover{ background-color:rgba(255,255,255,.15); color:var(--af-white); border-color:var(--af-white); }
+  .af-btn-ghost-dark{ background:transparent; color:var(--af-primary); border-color:var(--af-primary-soft); }
+  .af-btn-ghost-dark:hover{ background:var(--af-primary-soft); }
+
+  /* =========================================================
+     2. NAVBAR
+     ========================================================= */
+  .af-navbar{
+    position:fixed; top:0; left:0; right:0; z-index:1030;
+    padding:18px 0;
+    background:transparent;
+    transition:var(--af-transition);
+  }
+  .af-navbar.is-scrolled{
+    background:rgba(255,255,255,.96);
+    backdrop-filter:blur(8px);
+    box-shadow:0 4px 18px rgba(11,61,107,0.08);
+    padding:10px 0;
+  }
+  .af-navbar .af-logo{
+    font-family:'Poppins', sans-serif;
+    font-weight:700;
+    font-size:1.25rem;
+    color:var(--af-white);
+    display:flex; align-items:center; gap:.5rem;
+    transition:var(--af-transition);
+  }
+  .af-navbar.is-scrolled .af-logo{ color:var(--af-primary); }
+  .af-navbar .af-logo i{ color:var(--af-accent); font-size:1.5rem; }
+
+  .af-nav-link{
+    color:rgba(255,255,255,.9);
+    font-weight:500;
+    margin:0 .75rem;
+    position:relative;
+    transition:var(--af-transition);
+  }
+  .af-nav-link::after{
+    content:'';
+    position:absolute; left:0; bottom:-6px;
+    width:0; height:2px; background:var(--af-accent);
+    transition:width .25s ease;
+  }
+  .af-nav-link:hover::after, .af-nav-link.active::after{ width:100%; }
+  .af-nav-link:hover{ color:var(--af-white); }
+  .af-navbar.is-scrolled .af-nav-link{ color:var(--af-primary); }
+  .af-navbar.is-scrolled .af-nav-link:hover{ color:var(--af-primary-dark); }
+
+  .af-nav-cta{
+    background-color:var(--af-accent);
+    color:var(--af-white) !important;
+    font-weight:600;
+    border-radius:50px;
+    padding:.55rem 1.4rem;
+    transition:var(--af-transition);
+  }
+  .af-nav-cta:hover{ background-color:var(--af-accent-dark); transform:translateY(-1px); }
+
+  .af-navbar .navbar-toggler{ border:none; }
+  .af-navbar .navbar-toggler-icon{ filter:none; }
+  .af-navbar:not(.is-scrolled) .navbar-toggler i{ color:#fff; }
+  .af-navbar.is-scrolled .navbar-toggler i{ color:var(--af-primary); }
+
+  @media (max-width:991.98px){
+    .af-navbar .navbar-collapse{
+      background:var(--af-white);
+      margin-top:14px;
+      padding:18px;
+      border-radius:var(--af-radius-md);
+      box-shadow:var(--af-shadow-md);
+    }
+    .af-navbar .af-nav-link, .af-navbar.is-scrolled .af-nav-link{ color:var(--af-primary); margin:.3rem 0; }
+    .af-nav-cta{ display:inline-block; margin-top:.5rem; }
+  }
+
+  /* =========================================================
+     3. HERO
+     ========================================================= */
+  .af-hero{
+    position:relative;
+    min-height:100vh;
+    display:flex; align-items:center;
+    padding-top:140px; padding-bottom:80px;
+    background:linear-gradient(135deg, var(--af-primary) 0%, var(--af-primary-dark) 60%, #062138 100%);
+    overflow:hidden;
+  }
+  .af-hero::before{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(27,184,166,.25), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba(27,184,166,.15), transparent 40%);
+    pointer-events:none;
+  }
+  .af-hero-content{ position:relative; z-index:2; color:var(--af-white); }
+  .af-hero-content h1{
+    color:var(--af-white);
+    font-size:clamp(2.1rem, 4vw, 3.4rem);
+    line-height:1.15;
+    margin-bottom:1.2rem;
+  }
+  .af-hero-content h1 span{ color:var(--af-accent); }
+  .af-hero-content p.af-hero-sub{
+    color:rgba(255,255,255,.85);
+    font-size:1.15rem;
+    max-width:540px;
+    margin-bottom:2rem;
+  }
+  .af-hero-badges{
+    margin-top:2.5rem;
+    display:flex; gap:1.5rem; flex-wrap:wrap;
+    color:rgba(255,255,255,.75); font-size:.9rem;
+  }
+  .af-hero-badges span{ display:flex; align-items:center; gap:.4rem; }
+  .af-hero-badges i{ color:var(--af-accent); }
+
+  .af-hero-media{ position:relative; z-index:2; }
+  .af-hero-media .af-img-frame{
+    border-radius:var(--af-radius-lg);
+    overflow:hidden;
+    box-shadow:var(--af-shadow-lg);
+    border:6px solid rgba(255,255,255,.08);
+    aspect-ratio:4/5;
+    background:linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  }
+  .af-hero-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .af-hero-floating-card{
+    position:absolute; bottom:-24px; left:-24px;
+    background:var(--af-white);
+    border-radius:var(--af-radius-md);
+    box-shadow:var(--af-shadow-lg);
+    padding:1.1rem 1.4rem;
+    display:flex; align-items:center; gap:.8rem;
+    max-width:240px;
+  }
+  .af-hero-floating-card .af-icon-circle{
+    background:var(--af-accent); color:var(--af-white);
+    width:44px; height:44px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;
+  }
+  .af-hero-floating-card strong{ display:block; color:var(--af-primary); font-family:'Poppins',sans-serif; }
+  .af-hero-floating-card span{ font-size:.82rem; color:var(--af-gray); }
+
+  @media (max-width:991.98px){
+    .af-hero{ padding-top:120px; text-align:center; }
+    .af-hero-content{ margin-bottom:3rem; }
+    .af-hero-content p.af-hero-sub{ margin-left:auto; margin-right:auto; }
+    .af-hero-badges{ justify-content:center; }
+    .af-hero-floating-card{ left:50%; transform:translateX(-50%); }
+  }
+
+  /* =========================================================
+     4. INDICADORES DE CONFIANZA
+     ========================================================= */
+  .af-trust{
+    background:var(--af-white);
+    margin-top:-1px;
+  }
+  .af-counter-item{ text-align:center; padding:1rem; }
+  .af-counter-number{
+    font-family:'Poppins',sans-serif;
+    font-weight:800;
+    font-size:clamp(2rem, 3.5vw, 2.8rem);
+    color:var(--af-primary);
+    line-height:1;
+  }
+  .af-counter-number .af-accent-text{ color:var(--af-accent); }
+  .af-counter-label{
+    color:var(--af-gray);
+    font-weight:500;
+    margin-top:.4rem;
+    font-size:.95rem;
+  }
+
+  /* =========================================================
+     5. PRODUCTOS
+     ========================================================= */
+  .af-bg-light{ background-color:var(--af-bg-light); }
+
+  .af-section-title{ font-size:clamp(1.8rem, 3vw, 2.4rem); margin-bottom:.6rem; }
+  .af-section-head{ max-width:680px; margin-bottom:3.5rem; }
+
+  .af-product-card{
+    background:var(--af-white);
+    border-radius:var(--af-radius-md);
+    padding:2.2rem 1.8rem;
+    height:100%;
+    box-shadow:var(--af-shadow-sm);
+    transition:var(--af-transition);
+    border:1px solid rgba(11,61,107,.06);
+  }
+  .af-product-card:hover{
+    transform:translateY(-8px);
+    box-shadow:var(--af-shadow-md);
+    border-color:rgba(27,184,166,.25);
+  }
+  .af-product-icon{
+    width:60px; height:60px; border-radius:16px;
+    background:var(--af-primary-soft);
+    color:var(--af-primary);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; margin-bottom:1.3rem;
+    transition:var(--af-transition);
+  }
+  .af-product-card:hover .af-product-icon{ background:var(--af-accent); color:var(--af-white); }
+  .af-product-card h3{ font-size:1.15rem; margin-bottom:.6rem; }
+  .af-product-card p{ color:var(--af-gray); font-size:.95rem; margin-bottom:1.2rem; }
+  .af-product-link{ color:var(--af-accent-dark); font-weight:600; font-size:.92rem; }
+  .af-product-link i{ transition:transform .2s ease; }
+  .af-product-link:hover i{ transform:translateX(4px); }
+  .af-product-link:hover{ color:var(--af-primary); }
+
+  /* =========================================================
+     6. BENEFICIOS
+     ========================================================= */
+  .af-benefit-item{
+    display:flex; gap:1.1rem; margin-bottom:1.8rem;
+  }
+  .af-benefit-icon{
+    width:50px; height:50px; border-radius:50%;
+    background:var(--af-accent); color:var(--af-white);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.25rem; flex-shrink:0;
+  }
+  .af-benefit-item h3{ font-size:1.05rem; margin-bottom:.3rem; }
+  .af-benefit-item p{ color:var(--af-gray); font-size:.93rem; margin-bottom:0; }
+  .af-benefits-media{
+    border-radius:var(--af-radius-lg);
+    overflow:hidden;
+    box-shadow:var(--af-shadow-md);
+    aspect-ratio:4/3;
+    background:linear-gradient(160deg, var(--af-primary-soft), #ffffff);
+  }
+  .af-benefits-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  /* =========================================================
+     7. CÓMO FUNCIONA
+     ========================================================= */
+  .af-steps{ position:relative; }
+  .af-step{
+    text-align:center;
+    padding:2rem 1.4rem;
+    position:relative;
+  }
+  .af-step-number{
+    width:64px; height:64px; border-radius:50%;
+    background:var(--af-white);
+    border:2px solid var(--af-accent);
+    color:var(--af-primary);
+    font-family:'Poppins',sans-serif; font-weight:700; font-size:1.4rem;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 1.3rem;
+    box-shadow:var(--af-shadow-sm);
+  }
+  .af-step h3{ font-size:1.1rem; margin-bottom:.5rem; }
+  .af-step p{ color:var(--af-gray); font-size:.93rem; max-width:260px; margin:0 auto; }
+  .af-step-connector{
+    position:absolute; top:32px; left:100%;
+    width:100%; height:2px;
+    background:repeating-linear-gradient(90deg, var(--af-accent) 0 8px, transparent 8px 16px);
+    display:none;
+  }
+  @media (min-width:768px){
+    .af-step-connector{ display:block; }
+  }
+
+  /* =========================================================
+     8. TESTIMONIOS
+     ========================================================= */
+  .af-testimonial-card{
+    background:var(--af-white);
+    border-radius:var(--af-radius-lg);
+    box-shadow:var(--af-shadow-md);
+    padding:3rem 2rem;
+    text-align:center;
+    max-width:680px;
+    margin:0 auto;
+  }
+  .af-testimonial-avatar{
+    width:84px; height:84px; border-radius:50%;
+    object-fit:cover;
+    border:4px solid var(--af-primary-soft);
+    margin:0 auto 1.2rem;
+    display:block;
+  }
+  .af-testimonial-quote{
+    font-size:1.1rem; color:#3A4856; font-style:italic; margin-bottom:1.2rem;
+  }
+  .af-testimonial-quote i.bi-quote{ color:var(--af-accent); font-size:1.6rem; display:block; margin-bottom:.4rem; }
+  .af-testimonial-name{ font-family:'Poppins',sans-serif; color:var(--af-primary); font-weight:600; }
+  .af-testimonial-role{ color:var(--af-gray); font-size:.88rem; }
+
+  #afCarousel .carousel-indicators [data-bs-target]{
+    background-color:var(--af-primary-soft);
+    width:10px; height:10px; border-radius:50%; opacity:1;
+  }
+  #afCarousel .carousel-indicators .active{ background-color:var(--af-accent); }
+  #afCarousel .carousel-control-prev, #afCarousel .carousel-control-next{
+    width:44px; height:44px; top:50%; transform:translateY(-50%);
+    background:var(--af-white); border-radius:50%; box-shadow:var(--af-shadow-sm);
+    opacity:1;
+  }
+  #afCarousel .carousel-control-prev{ left:-10px; }
+  #afCarousel .carousel-control-next{ right:-10px; }
+  @media (max-width:575.98px){
+    #afCarousel .carousel-control-prev, #afCarousel .carousel-control-next{ display:none; }
+  }
+  #afCarousel .carousel-control-prev-icon, #afCarousel .carousel-control-next-icon{ filter:invert(.3) sepia(1) saturate(3) hue-rotate(165deg); }
+
+  /* =========================================================
+     9. CTA FINAL + FOOTER
+     ========================================================= */
+  .af-cta-final{
+    background:linear-gradient(120deg, var(--af-primary), var(--af-primary-dark));
+    border-radius:var(--af-radius-lg);
+    padding:3.5rem 2.5rem;
+    color:var(--af-white);
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .af-cta-final::before{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 90% 10%, rgba(27,184,166,.3), transparent 50%);
+  }
+  .af-cta-final h2{ color:var(--af-white); position:relative; z-index:1; }
+  .af-cta-final p{ color:rgba(255,255,255,.85); position:relative; z-index:1; max-width:560px; margin:0 auto 1.8rem; }
+  .af-cta-final .af-btn{ position:relative; z-index:1; }
+
+  .af-footer{
+    background:#082235;
+    color:rgba(255,255,255,.75);
+    padding:70px 0 0;
+  }
+  .af-footer .af-logo{ color:var(--af-white); font-family:'Poppins',sans-serif; font-weight:700; font-size:1.2rem; display:flex; align-items:center; gap:.5rem; margin-bottom:1rem; }
+  .af-footer .af-logo i{ color:var(--af-accent); }
+  .af-footer h5{ color:var(--af-white); font-family:'Poppins',sans-serif; font-size:1rem; margin-bottom:1.2rem; }
+  .af-footer a{ color:rgba(255,255,255,.7); transition:var(--af-transition); }
+  .af-footer a:hover{ color:var(--af-accent); }
+  .af-footer ul{ list-style:none; padding:0; margin:0; }
+  .af-footer ul li{ margin-bottom:.6rem; }
+  .af-footer .af-social a{
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,.08);
+    display:inline-flex; align-items:center; justify-content:center;
+    margin-right:.5rem;
+  }
+  .af-footer .af-social a:hover{ background:var(--af-accent); color:var(--af-white); }
+  .af-footer-bottom{
+    border-top:1px solid rgba(255,255,255,.1);
+    margin-top:50px; padding:24px 0;
+    font-size:.82rem; color:rgba(255,255,255,.55);
+  }
+  .af-footer-legal{
+    font-size:.8rem; color:rgba(255,255,255,.55);
+    line-height:1.6; margin-bottom:1.5rem;
+  }
+  .af-footer-legal i{ color:var(--af-accent); margin-right:.4rem; }
+
+  /* =========================================================
+     10. WIDGET CHATBOT (Aurorita)
+     ========================================================= */
+  .af-bot-toggle{
+    position:fixed; bottom:24px; right:24px; z-index:1080;
+    width:64px; height:64px; border-radius:50%;
+    background:var(--af-accent);
+    border:none; cursor:pointer;
+    box-shadow:0 10px 25px rgba(11,61,107,.35);
+    display:flex; align-items:center; justify-content:center;
+    transition:var(--af-transition);
+    overflow:hidden;
+  }
+  .af-bot-toggle:hover{ transform:scale(1.06); background:var(--af-accent-dark); }
+  .af-bot-toggle img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .af-bot-toggle i{ color:var(--af-white); font-size:1.6rem; }
+  .af-bot-toggle .af-bot-close-icon{ display:none; }
+  .af-bot-toggle.is-open .af-bot-open-icon{ display:none; }
+  .af-bot-toggle.is-open .af-bot-close-icon{ display:block; }
+  .af-bot-pulse{
+    position:absolute; top:-2px; right:-2px;
+    width:14px; height:14px; border-radius:50%;
+    background:#FF5C5C; border:2px solid var(--af-white);
+  }
+
+  .af-bot-window{
+    position:fixed; bottom:100px; right:24px; z-index:1079;
+    width:360px; max-width:92vw; height:500px; max-height:75vh;
+    background:var(--af-white);
+    border-radius:var(--af-radius-md);
+    box-shadow:var(--af-shadow-lg);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    transform-origin:bottom right;
+    transform:scale(0.85) translateY(20px);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease, visibility .25s ease;
+  }
+  .af-bot-window.is-open{
+    transform:scale(1) translateY(0);
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+  }
+
+  .af-bot-header{
+    background:linear-gradient(120deg, var(--af-primary), var(--af-primary-dark));
+    color:var(--af-white);
+    padding:14px 16px;
+    display:flex; align-items:center; gap:.7rem;
+    flex-shrink:0;
+  }
+  .af-bot-avatar{
+    width:42px; height:42px; border-radius:50%;
+    background:rgba(255,255,255,.15);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; flex-shrink:0;
+  }
+  .af-bot-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .af-bot-avatar i{ font-size:1.3rem; color:var(--af-white); }
+  .af-bot-header-info strong{ display:block; font-family:'Poppins',sans-serif; font-size:.95rem; }
+  .af-bot-header-info span{ font-size:.75rem; color:rgba(255,255,255,.75); display:flex; align-items:center; gap:.3rem; }
+  .af-bot-status-dot{ width:7px; height:7px; border-radius:50%; background:#4ADE80; display:inline-block; }
+  .af-bot-header-close{
+    margin-left:auto; background:transparent; border:none; color:rgba(255,255,255,.8);
+    font-size:1.1rem; cursor:pointer; padding:.3rem;
+  }
+  .af-bot-header-close:hover{ color:var(--af-white); }
+
+  .af-bot-messages{
+    flex:1; overflow-y:auto;
+    padding:18px 16px;
+    background:var(--af-bg-light);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .af-bot-msg{
+    max-width:80%;
+    padding:.65rem .9rem;
+    border-radius:14px;
+    font-size:.88rem; line-height:1.45;
+  }
+  .af-bot-msg-bot{
+    background:var(--af-white);
+    color:#2C3A47;
+    align-self:flex-start;
+    border-bottom-left-radius:4px;
+    box-shadow:var(--af-shadow-sm);
+  }
+  .af-bot-msg-user{
+    background:var(--af-accent);
+    color:var(--af-white);
+    align-self:flex-end;
+    border-bottom-right-radius:4px;
+  }
+
+  .af-bot-inputbar{
+    display:flex; align-items:center; gap:.5rem;
+    padding:12px 14px;
+    border-top:1px solid rgba(11,61,107,.08);
+    background:var(--af-white);
+    flex-shrink:0;
+  }
+  .af-bot-inputbar input{
+    flex:1; border:1px solid rgba(11,61,107,.15);
+    border-radius:50px; padding:.6rem 1rem;
+    font-size:.88rem; outline:none;
+  }
+  .af-bot-inputbar input:focus{ border-color:var(--af-accent); }
+  .af-bot-send{
+    width:40px; height:40px; border-radius:50%;
+    background:var(--af-primary); color:var(--af-white);
+    border:none; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; cursor:pointer; transition:var(--af-transition);
+  }
+  .af-bot-send:hover{ background:var(--af-accent-dark); }
+
+  /* --- Botón de micrófono / grabación de audio --- */
+  .af-bot-mic{
+    width:40px; height:40px; border-radius:50%;
+    background:var(--af-primary-soft); color:var(--af-primary);
+    border:none; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; cursor:pointer; transition:var(--af-transition);
+    position:relative;
+  }
+  .af-bot-mic:hover{ background:#d7e3ef; }
+  .af-bot-mic.is-recording{
+    background:#e5484d; color:var(--af-white);
+    animation:afMicPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes afMicPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(229,72,77,.45); }
+    50%{ box-shadow:0 0 0 8px rgba(229,72,77,0); }
+  }
+
+  /* Indicador de tiempo mientras se graba (reemplaza al input) */
+  .af-bot-recording{
+    flex:1; display:none; align-items:center; gap:.5rem;
+    padding:.6rem 1rem; border-radius:50px;
+    background:var(--af-primary-soft); color:var(--af-primary);
+    font-size:.85rem; font-weight:600;
+  }
+  .af-bot-inputbar.is-recording .af-bot-recording{ display:flex; }
+  .af-bot-inputbar.is-recording input{ display:none; }
+  .af-bot-recording-dot{
+    width:9px; height:9px; border-radius:50%;
+    background:#e5484d; flex-shrink:0;
+    animation:afMicPulse 1.2s ease-in-out infinite;
+  }
+
+  /* Burbuja de mensaje con audio reproducible */
+  .af-bot-msg-audio{ padding:.4rem; }
+  .af-bot-msg-audio audio{ display:block; max-width:220px; height:38px; }
+  .af-bot-msg-audio.af-bot-msg-user audio{ filter:none; }
+
+  @media (max-width:480px){
+    .af-bot-window{ right:4vw; bottom:90px; width:92vw; height:70vh; }
+    .af-bot-toggle{ right:18px; bottom:18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+<nav class="af-navbar" id="afNavbar">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="#inicio" class="af-logo">
+        <i class="bi bi-shield-check"></i> Aurora Financiera
+      </a>
+
+      <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#afNavCollapse" aria-controls="afNavCollapse" aria-expanded="false" aria-label="Abrir menú de navegación">
+        <i class="bi bi-list" style="font-size:1.8rem;"></i>
+      </button>
+
+      <div class="collapse navbar-collapse flex-grow-0" id="afNavCollapse">
+        <ul class="navbar-nav d-lg-flex flex-lg-row align-items-lg-center list-unstyled m-0">
+          <li><a class="af-nav-link" href="#inicio">Inicio</a></li>
+          <li><a class="af-nav-link" href="#productos">Productos</a></li>
+          <li><a class="af-nav-link" href="#beneficios">Beneficios</a></li>
+          <li><a class="af-nav-link" href="#asociados">Asociados</a></li>
+          <li><a class="af-nav-link" href="#contacto">Contacto</a></li>
+          <li class="ms-lg-2"><a class="af-nav-cta" href="#contacto">Soy asociado</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- =========================================================
+     HERO
+     ========================================================= -->
+<header class="af-hero" id="inicio">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <div class="af-hero-content">
+          <p class="af-eyebrow" style="color:var(--af-accent);">Cooperativa de ahorro y crédito</p>
+          <h1>Tu cooperativa, <span>ahora 24/7</span></h1>
+          <p class="af-hero-sub">Resuelve tus trámites, pide créditos y administra tus ahorros desde cualquier lugar. Atención digital inmediata, sin filas ni horarios, con el respaldo de 18 años de solidez.</p>
+          <div class="d-flex flex-wrap gap-3 justify-content-lg-start justify-content-center">
+            <a href="#contacto" class="af-btn af-btn-primary">
+              Abre tu cuenta en minutos <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="#productos" class="af-btn af-btn-outline">Conoce más</a>
+          </div>
+          <div class="af-hero-badges justify-content-lg-start">
+            <span><i class="bi bi-patch-check-fill"></i> Vigilada por la Supersolidaria</span>
+            <span><i class="bi bi-lock-fill"></i> Datos protegidos</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 mt-5 mt-lg-0">
+        <div class="af-hero-media position-relative">
+          <div class="af-img-frame">
+            <img src="Hero.png" alt="Asociada de Aurora Financiera usando la banca digital desde su celular" loading="lazy">
+          </div>
+          <div class="af-hero-floating-card d-none d-sm-flex">
+            <div class="af-icon-circle"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+              <strong>+250.000</strong>
+              <span>asociados confían en nosotros</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- =========================================================
+     INDICADORES DE CONFIANZA
+     ========================================================= -->
+<section class="af-trust af-section py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number"><span class="af-counter" data-target="250000">0</span><span class="af-accent-text">+</span></div>
+          <p class="af-counter-label">Asociados</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number"><span class="af-counter" data-target="18">0</span></div>
+          <p class="af-counter-label">Años de trayectoria</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number"><span class="af-counter" data-target="14">0</span></div>
+          <p class="af-counter-label">Ciudades en Colombia</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="af-counter-item">
+          <div class="af-counter-number">24<span class="af-accent-text">/7</span></div>
+          <p class="af-counter-label">Atención digital</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PRODUCTOS
+     ========================================================= -->
+<section class="af-section af-bg-light" id="productos">
+  <div class="container">
+    <div class="af-section-head">
+      <p class="af-eyebrow">Productos</p>
+      <h2 class="af-section-title">Soluciones financieras para cada etapa de tu vida</h2>
+      <p class="af-lead">Diseñados para asociados como tú, con tasas justas y procesos 100% digitales.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-cash-coin"></i></div>
+          <h3>Crédito de consumo</h3>
+          <p>Financia tus proyectos personales con desembolso rápido y cuotas a tu medida.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-house-heart"></i></div>
+          <h3>Crédito de vivienda</h3>
+          <p>Cumple el sueño de tu casa propia con plazos flexibles y acompañamiento experto.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-piggy-bank"></i></div>
+          <h3>Ahorro programado</h3>
+          <p>Construye tus metas paso a paso con aportes automáticos y rendimientos atractivos.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="af-product-card">
+          <div class="af-product-icon"><i class="bi bi-graph-up-arrow"></i></div>
+          <h3>CDT</h3>
+          <p>Haz crecer tu dinero con un certificado de depósito a término con tasas preferenciales.</p>
+          <a href="#contacto" class="af-product-link">Conocer más <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     BENEFICIOS DEL CANAL DIGITAL
+     ========================================================= -->
+<section class="af-section" id="beneficios">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 order-lg-2">
+        <div class="af-section-head mb-4">
+          <p class="af-eyebrow">Canal digital</p>
+          <h2 class="af-section-title">Toda tu cooperativa en la palma de tu mano</h2>
+        </div>
+
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-clock-history"></i></div>
+          <div>
+            <h3>Autoservicio 24/7</h3>
+            <p>Consulta saldos, certificados y haz transacciones a cualquier hora, todos los días del año.</p>
+          </div>
+        </div>
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-whatsapp"></i></div>
+          <div>
+            <h3>Pagos por WhatsApp</h3>
+            <p>Paga tus cuotas y aportes en segundos, desde el chat que ya usas todos los días.</p>
+          </div>
+        </div>
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-phone"></i></div>
+          <div>
+            <h3>Onboarding digital en minutos</h3>
+            <p>Hazte asociado sin papeleo ni filas: validamos tu identidad de forma segura y rápida.</p>
+          </div>
+        </div>
+        <div class="af-benefit-item">
+          <div class="af-benefit-icon"><i class="bi bi-bell"></i></div>
+          <div>
+            <h3>Recordatorios amables</h3>
+            <p>Te avisamos antes de cada vencimiento para que nunca pierdas tus beneficios como asociado.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 order-lg-1">
+        <div class="af-benefits-media">
+          <img src="Onboarding.jpeg" alt="Asociado de Aurora Financiera realizando un pago digital desde su celular" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     CÓMO FUNCIONA
+     ========================================================= -->
+<section class="af-section af-bg-light">
+  <div class="container">
+    <div class="af-section-head mx-auto text-center">
+      <p class="af-eyebrow">Proceso</p>
+      <h2 class="af-section-title">Cómo funciona</h2>
+      <p class="af-lead">Tres pasos sencillos para empezar a disfrutar tu cooperativa digital.</p>
+    </div>
+    <div class="row af-steps">
+      <div class="col-md-4 position-relative">
+        <div class="af-step">
+          <div class="af-step-number">1</div>
+          <h3>Regístrate</h3>
+          <p>Completa tus datos básicos desde la web o la app en menos de 5 minutos.</p>
+          <div class="af-step-connector"></div>
+        </div>
+      </div>
+      <div class="col-md-4 position-relative">
+        <div class="af-step">
+          <div class="af-step-number">2</div>
+          <h3>Verifica tu identidad</h3>
+          <p>Confirma quién eres con un proceso seguro y validado, sin necesidad de ir a una oficina.</p>
+          <div class="af-step-connector"></div>
+        </div>
+      </div>
+      <div class="col-md-4 position-relative">
+        <div class="af-step">
+          <div class="af-step-number">3</div>
+          <h3>Opera desde tu celular</h3>
+          <p>Accede a tus productos, paga y haz seguimiento a tus ahorros cuando lo necesites.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     TESTIMONIOS
+     ========================================================= -->
+<section class="af-section" id="asociados">
+  <div class="af-section-head text-center mx-auto container">
+    <p class="af-eyebrow">Asociados</p>
+    <h2 class="af-section-title">Lo que dicen nuestros asociados</h2>
+  </div>
+
+  <div class="container">
+    <div id="afCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#afCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Testimonio 1"></button>
+        <button type="button" data-bs-target="#afCarousel" data-bs-slide-to="1" aria-label="Testimonio 2"></button>
+        <button type="button" data-bs-target="#afCarousel" data-bs-slide-to="2" aria-label="Testimonio 3"></button>
+      </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="af-testimonial-card">
+            <i class="bi bi-quote"></i>
+            <img src="cliente_1.png" alt="Foto de María Fernanda Ortiz, asociada de Aurora Financiera" class="af-testimonial-avatar" loading="lazy">
+            <p class="af-testimonial-quote">Pedí mi crédito de consumo desde el celular y en menos de un día ya tenía el dinero en mi cuenta. Nunca había sido tan fácil.</p>
+            <p class="af-testimonial-name">María Fernanda Ortiz</p>
+            <p class="af-testimonial-role">Asociada desde 2016 · Medellín</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="af-testimonial-card">
+            <i class="bi bi-quote"></i>
+            <img src="cliente_2.png" alt="Foto de Jorge Hernán Restrepo, asociado de Aurora Financiera" class="af-testimonial-avatar" loading="lazy">
+            <p class="af-testimonial-quote">Pago mis cuotas por WhatsApp mientras voy en el bus. Aurora entendió que necesitamos rapidez sin perder la cercanía de siempre.</p>
+            <p class="af-testimonial-name">Jorge Hernán Restrepo</p>
+            <p class="af-testimonial-role">Asociado desde 2009 · Bogotá</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="af-testimonial-card">
+            <i class="bi bi-quote"></i>
+            <img src="cliente_3.png" alt="Foto de Luz Dary Cardona, asociada de Aurora Financiera" class="af-testimonial-avatar" loading="lazy">
+            <p class="af-testimonial-quote">Abrí mi ahorro programado en línea y los recordatorios me han ayudado a no fallar ni un mes. Hoy ya casi cumplo mi meta.</p>
+            <p class="af-testimonial-name">Luz Dary Cardona</p>
+            <p class="af-testimonial-role">Asociada desde 2021 · Cali</p>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#afCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#afCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     CTA FINAL
+     ========================================================= -->
+<section class="af-section pt-0">
+  <div class="container">
+    <div class="af-cta-final">
+      <h2>Empieza a vivir tu cooperativa 24/7</h2>
+      <p>Únete a los más de 250.000 asociados que ya disfrutan de una experiencia financiera digital, segura y cercana.</p>
+      <a href="#contacto" class="af-btn af-btn-primary">Abre tu cuenta en minutos <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer class="af-footer" id="contacto">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <a href="#inicio" class="af-logo"><i class="bi bi-shield-check"></i> Aurora Financiera</a>
+        <p class="small">Cooperativa de ahorro y crédito al servicio de los colombianos desde hace 18 años.</p>
+        <div class="af-social mt-3">
+          <a href="#" aria-label="Facebook de Aurora Financiera"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="Instagram de Aurora Financiera"><i class="bi bi-instagram"></i></a>
+          <a href="#" aria-label="X (Twitter) de Aurora Financiera"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" aria-label="LinkedIn de Aurora Financiera"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-2 col-6">
+        <h5>Navegación</h5>
+        <ul>
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#productos">Productos</a></li>
+          <li><a href="#beneficios">Beneficios</a></li>
+          <li><a href="#asociados">Asociados</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-6">
+        <h5>Productos</h5>
+        <ul>
+          <li><a href="#productos">Crédito de consumo</a></li>
+          <li><a href="#productos">Crédito de vivienda</a></li>
+          <li><a href="#productos">Ahorro programado</a></li>
+          <li><a href="#productos">CDT</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3">
+        <h5>Contacto</h5>
+        <ul>
+          <li><i class="bi bi-geo-alt me-2"></i>Calle 100 # 19-54, Bogotá</li>
+          <li><i class="bi bi-telephone me-2"></i>(601) 555 0199</li>
+          <li><i class="bi bi-envelope me-2"></i>contacto@aurorafinanciera.co</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="af-footer-legal mt-5">
+      <p><i class="bi bi-patch-check"></i>Aurora Financiera es una cooperativa de ahorro y crédito vigilada por la Superintendencia de la Economía Solidaria (Supersolidaria).</p>
+      <p><i class="bi bi-lock"></i>Tus datos personales son tratados conforme a la Ley 1581 de 2012 de Protección de Datos Personales (Habeas Data). Consulta nuestra política de tratamiento de datos para conocer tus derechos.</p>
+    </div>
+
+    <div class="af-footer-bottom d-flex flex-wrap justify-content-between gap-2">
+      <span>&copy; <span id="afYear"></span> Aurora Financiera. Todos los derechos reservados.</span>
+      <span><a href="#">Política de privacidad</a> · <a href="#">Términos y condiciones</a></span>
+    </div>
+  </div>
+</footer>
+
+<!-- INICIO WIDGET BOT -->
+<!--
+  Componente autónomo del asistente virtual "Aurorita".
+  Reemplazar el contenido de #afBotWindow (o todo este bloque)
+  por el iframe/script real del bot de la plataforma cuando esté disponible.
+-->
+<button class="af-bot-toggle" id="afBotToggle" aria-haspopup="dialog" aria-expanded="false" aria-controls="afBotWindow" aria-label="Abrir chat con Aurorita, asistente de Aurora Financiera">
+  <span class="af-bot-pulse" aria-hidden="true"></span>
+  <img src="aurorita.png" alt="" aria-hidden="true" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+  <i class="bi bi-chat-dots-fill af-bot-open-icon" style="display:none;"></i>
+  <i class="bi bi-x-lg af-bot-close-icon"></i>
+</button>
+
+<div class="af-bot-window" id="afBotWindow" role="dialog" aria-label="Chat con Aurorita, asistente de Aurora Financiera" aria-hidden="true">
+  <div class="af-bot-header">
+    <div class="af-bot-avatar">
+      <img src="aurorita.png" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <i class="bi bi-robot" style="display:none;"></i>
+    </div>
+    <div class="af-bot-header-info">
+      <strong>Aurorita — Tu asistente Aurora</strong>
+      <span><span class="af-bot-status-dot"></span> En línea</span>
+    </div>
+    <button class="af-bot-header-close" id="afBotClose" aria-label="Cerrar chat">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="af-bot-messages" id="afBotMessages" aria-live="polite">
+    <div class="af-bot-msg af-bot-msg-bot">
+      ¡Hola! 👋 Soy Aurorita, tu asistente virtual de Aurora Financiera. ¿En qué puedo ayudarte hoy?
+    </div>
+  </div>
+
+  <form class="af-bot-inputbar" id="afBotForm">
+    <input type="text" id="afBotInput" placeholder="Escribe tu mensaje..." aria-label="Escribe tu mensaje para Aurorita" autocomplete="off">
+    <div class="af-bot-recording" id="afBotRecording" aria-hidden="true">
+      <span class="af-bot-recording-dot" aria-hidden="true"></span>
+      <span>Grabando… <span id="afBotRecTime">0:00</span></span>
+    </div>
+    <button type="button" class="af-bot-mic" id="afBotMic" aria-label="Grabar mensaje de voz" title="Grabar mensaje de voz">
+      <i class="bi bi-mic-fill"></i>
+    </button>
+    <button type="submit" class="af-bot-send" aria-label="Enviar mensaje">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </form>
+</div>
+<!-- FIN WIDGET BOT -->
+
+<!-- Bootstrap 5 JS (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // =========================================================
+  // NAVBAR: cambia a sólida al hacer scroll
+  // =========================================================
+  const afNavbar = document.getElementById('afNavbar');
+  function afHandleNavbarScroll(){
+    if (window.scrollY > 40){ afNavbar.classList.add('is-scrolled'); }
+    else { afNavbar.classList.remove('is-scrolled'); }
+  }
+  afHandleNavbarScroll();
+  window.addEventListener('scroll', afHandleNavbarScroll);
+
+  // Cierra el menú colapsado en móvil al elegir un enlace
+  document.querySelectorAll('.af-nav-link, .af-nav-cta').forEach(function(link){
+    link.addEventListener('click', function(){
+      const collapseEl = document.getElementById('afNavCollapse');
+      if (collapseEl.classList.contains('show')) {
+        bootstrap.Collapse.getOrCreateInstance(collapseEl).hide();
+      }
+    });
+  });
+
+  // =========================================================
+  // CONTADORES ANIMADOS (se activan al entrar en pantalla)
+  // =========================================================
+  const afCounters = document.querySelectorAll('.af-counter');
+  let afCountersStarted = false;
+
+  function afAnimateCounters(){
+    if (afCountersStarted) return;
+    afCountersStarted = true;
+    afCounters.forEach(function(counter){
+      const target = parseInt(counter.getAttribute('data-target'), 10);
+      const duration = 1400;
+      const start = performance.now();
+
+      function step(now){
+        const progress = Math.min((now - start) / duration, 1);
+        const value = Math.floor(progress * target);
+        counter.textContent = value.toLocaleString('es-CO');
+        if (progress < 1){ requestAnimationFrame(step); }
+        else { counter.textContent = target.toLocaleString('es-CO'); }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const afTrustSection = document.querySelector('.af-trust');
+  if ('IntersectionObserver' in window && afTrustSection){
+    const afObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){ afAnimateCounters(); }
+      });
+    }, { threshold: 0.4 });
+    afObserver.observe(afTrustSection);
+  } else {
+    afAnimateCounters();
+  }
+
+  // =========================================================
+  // AÑO ACTUAL EN EL FOOTER
+  // =========================================================
+  document.getElementById('afYear').textContent = new Date().getFullYear();
+
+  // =========================================================
+  // WIDGET CHATBOT "AURA"
+  // (Lógica de demostración: al integrar el bot real de la
+  // plataforma, sustituir el manejador de afBotForm por la
+  // llamada correspondiente o reemplazar todo el bloque por
+  // el iframe/script oficial.)
+  // =========================================================
+  const afBotToggle  = document.getElementById('afBotToggle');
+  const afBotWindow  = document.getElementById('afBotWindow');
+  const afBotClose   = document.getElementById('afBotClose');
+  const afBotForm    = document.getElementById('afBotForm');
+  const afBotInput   = document.getElementById('afBotInput');
+  const afBotMessages= document.getElementById('afBotMessages');
+
+  function afOpenBot(){
+    afBotWindow.classList.add('is-open');
+    afBotWindow.setAttribute('aria-hidden', 'false');
+    afBotToggle.classList.add('is-open');
+    afBotToggle.setAttribute('aria-expanded', 'true');
+    afBotToggle.style.opacity = '0';
+    afBotToggle.style.pointerEvents = 'none';
+    afBotToggle.style.transform = 'scale(0.5)';
+    afBotInput.focus();
+  }
+  function afCloseBot(){
+    // Detén cualquier grabación de voz en curso al cerrar el chat
+    if (typeof afStopRecording === 'function' &&
+        afMediaRecorder && afMediaRecorder.state === 'recording'){
+      afStopRecording();
+    }
+    afBotWindow.classList.remove('is-open');
+    afBotWindow.setAttribute('aria-hidden', 'true');
+    afBotToggle.classList.remove('is-open');
+    afBotToggle.setAttribute('aria-expanded', 'false');
+    afBotToggle.style.opacity = '';
+    afBotToggle.style.pointerEvents = '';
+    afBotToggle.style.transform = '';
+    afBotToggle.focus();
+  }
+  afBotToggle.addEventListener('click', function(){
+    afBotWindow.classList.contains('is-open') ? afCloseBot() : afOpenBot();
+  });
+  afBotClose.addEventListener('click', afCloseBot);
+
+  // Cierra el chat con la tecla Escape (accesibilidad por teclado)
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && afBotWindow.classList.contains('is-open')){
+      afCloseBot();
+    }
+  });
+
+  function afAddMessage(text, sender){
+    const bubble = document.createElement('div');
+    bubble.className = 'af-bot-msg ' + (sender === 'user' ? 'af-bot-msg-user' : 'af-bot-msg-bot');
+    bubble.textContent = text;
+    afBotMessages.appendChild(bubble);
+    afBotMessages.scrollTop = afBotMessages.scrollHeight;
+  }
+
+  // Respuesta simulada del bot (placeholder de demostración).
+  // Al integrar el bot real, reemplazar por la respuesta del API.
+  function afBotReply(){
+    setTimeout(function(){
+      afAddMessage('¡Gracias por escribirme! Soy Aurorita y pronto podré ayudarte con todo lo que necesites. Por ahora, un asesor de Aurora Financiera se pondrá en contacto contigo muy pronto. 😊', 'bot');
+    }, 700);
+  }
+
+  afBotForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const text = afBotInput.value.trim();
+    if (!text) return;
+    afAddMessage(text, 'user');
+    afBotInput.value = '';
+    afBotReply();
+  });
+
+  // =========================================================
+  // MENSAJES DE VOZ (grabación con MediaRecorder)
+  // El audio grabado se muestra como una burbuja reproducible.
+  // Al integrar el bot real, enviar el Blob (audioBlob) al API
+  // en lugar de reproducirlo localmente.
+  // =========================================================
+  const afBotMic       = document.getElementById('afBotMic');
+  const afBotRecording = document.getElementById('afBotRecording');
+  const afBotRecTime   = document.getElementById('afBotRecTime');
+  const afBotInputbar  = afBotForm;
+
+  let afMediaRecorder = null;
+  let afAudioChunks   = [];
+  let afRecTimer      = null;
+  let afRecSeconds    = 0;
+
+  // Inserta una burbuja con un reproductor de audio
+  function afAddAudioMessage(audioURL, sender){
+    const bubble = document.createElement('div');
+    bubble.className = 'af-bot-msg af-bot-msg-audio ' +
+      (sender === 'user' ? 'af-bot-msg-user' : 'af-bot-msg-bot');
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.src = audioURL;
+    audio.setAttribute('aria-label', 'Mensaje de voz');
+    bubble.appendChild(audio);
+    afBotMessages.appendChild(bubble);
+    afBotMessages.scrollTop = afBotMessages.scrollHeight;
+  }
+
+  function afFormatTime(total){
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  async function afStartRecording(){
+    if (!navigator.mediaDevices || !window.MediaRecorder){
+      afAddMessage('Tu navegador no admite la grabación de audio. Intenta escribir tu mensaje. 🙏', 'bot');
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err){
+      afAddMessage('No pude acceder al micrófono. Revisa los permisos del navegador para poder enviarme audios. 🎤', 'bot');
+      return;
+    }
+
+    afAudioChunks = [];
+    afMediaRecorder = new MediaRecorder(stream);
+
+    afMediaRecorder.addEventListener('dataavailable', function(e){
+      if (e.data.size > 0) afAudioChunks.push(e.data);
+    });
+
+    afMediaRecorder.addEventListener('stop', function(){
+      // Libera el micrófono
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      if (afAudioChunks.length){
+        const audioBlob = new Blob(afAudioChunks, { type: afMediaRecorder.mimeType || 'audio/webm' });
+        const audioURL  = URL.createObjectURL(audioBlob);
+        afAddAudioMessage(audioURL, 'user');
+        afBotReply();
+      }
+    });
+
+    afMediaRecorder.start();
+
+    // UI de grabación
+    afRecSeconds = 0;
+    afBotRecTime.textContent = afFormatTime(0);
+    afBotInputbar.classList.add('is-recording');
+    afBotMic.classList.add('is-recording');
+    afBotMic.setAttribute('aria-label', 'Detener y enviar mensaje de voz');
+    afBotMic.querySelector('i').className = 'bi bi-stop-fill';
+    afBotRecording.setAttribute('aria-hidden', 'false');
+    afRecTimer = setInterval(function(){
+      afRecSeconds++;
+      afBotRecTime.textContent = afFormatTime(afRecSeconds);
+      if (afRecSeconds >= 120) afStopRecording(); // límite de seguridad: 2 min
+    }, 1000);
+  }
+
+  function afStopRecording(){
+    if (afMediaRecorder && afMediaRecorder.state !== 'inactive'){
+      afMediaRecorder.stop();
+    }
+    clearInterval(afRecTimer);
+    afBotInputbar.classList.remove('is-recording');
+    afBotMic.classList.remove('is-recording');
+    afBotMic.setAttribute('aria-label', 'Grabar mensaje de voz');
+    afBotMic.querySelector('i').className = 'bi bi-mic-fill';
+    afBotRecording.setAttribute('aria-hidden', 'true');
+  }
+
+  afBotMic.addEventListener('click', function(){
+    if (afMediaRecorder && afMediaRecorder.state === 'recording'){
+      afStopRecording();
+    } else {
+      afStartRecording();
+    }
+  });
+</script>
+<!-- BOTAI Widget — pegar antes de </body> -->
+ <!--
+  <script
+  src="http://localhost:5173/widget/v1/botai-widget.js"
+  data-agent-id="0af06a84-7116-4483-a1a0-de7f809c3bca"
+  data-tenant-id="118fea4c-d69a-4037-98ea-aa51dccbe075"
+  defer
+  ></script>
+-->
+</body>
+</html>

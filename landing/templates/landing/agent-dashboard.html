@@ -1,0 +1,845 @@
+<title>Panel de Agente — Aurora Financiera</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --af-primary:#0B3D6B; --af-primary-dark:#082c4f; --af-primary-soft:#e7eef5;
+  --af-accent:#1BB8A6; --af-accent-dark:#149384; --af-bg-light:#F7FAFC;
+  --af-gray:#5C6B7A; --af-gray-light:#9AA7B4; --af-white:#FFFFFF;
+  --af-border:#DDE8F4; --af-hover:#EEF4FA;
+  --s-online:#1BB8A6; --s-busy:#F59E0B; --s-offline:#94A3B8;
+  --sidebar-w:296px; --right-w:268px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;}}
+html,body{height:100%;overflow:hidden;}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--af-bg-light);color:#26313D;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+
+/* ── TOPBAR ── */
+.topbar{height:56px;background:var(--af-primary);display:flex;align-items:center;gap:14px;padding:0 18px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.08);}
+.tb-logo{display:flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:.95rem;letter-spacing:-.01em;white-space:nowrap;}
+.tb-logo-icon{width:26px;height:26px;background:var(--af-accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tb-logo-icon svg{width:14px;height:14px;fill:#fff;}
+.tb-div{width:1px;height:22px;background:rgba(255,255,255,.18);}
+.tb-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.6);}
+.tb-spacer{flex:1;}
+.tb-stats{display:flex;gap:18px;align-items:center;}
+.tb-stat{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.7);font-size:.75rem;font-weight:500;font-variant-numeric:tabular-nums;}
+.tb-stat b{color:#fff;font-size:.88rem;font-weight:700;}
+.tb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.agent-tb{display:flex;align-items:center;gap:10px;position:relative;}
+.agent-av{width:32px;height:32px;border-radius:50%;background:var(--af-accent);color:#fff;font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;cursor:pointer;}
+.agent-av .sdot{position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;border:2px solid var(--af-primary);background:var(--s-online);}
+.agent-meta{display:flex;flex-direction:column;}
+.agent-name{color:#fff;font-weight:600;font-size:.8rem;line-height:1.2;}
+.status-toggle-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.6);font-size:.7rem;font-weight:500;padding:0;transition:color .15s;}
+.status-toggle-btn:hover{color:#fff;}
+.sdot-sm{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+/* Status dropdown */
+.status-menu{position:absolute;top:calc(100% + 10px);right:0;background:#fff;border:1px solid var(--af-border);border-radius:12px;box-shadow:0 8px 28px rgba(11,61,107,.16);overflow:hidden;z-index:200;min-width:190px;display:none;}
+.status-menu.open{display:block;}
+.sm-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:.82rem;font-weight:500;cursor:pointer;transition:background .12s;}
+.sm-opt:hover{background:var(--af-hover);}
+.sm-opt.active{background:var(--af-primary-soft);font-weight:700;color:var(--af-primary);}
+
+/* ── MAIN GRID ── */
+.dashboard{flex:1;display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--right-w);overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:#fff;border-right:1px solid var(--af-border);display:flex;flex-direction:column;overflow:hidden;}
+.sb-search{padding:12px 14px 10px;border-bottom:1px solid var(--af-border);}
+.sb-search-wrap{position:relative;}
+.sb-search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;fill:var(--af-gray-light);}
+.sb-search-input{width:100%;background:var(--af-bg-light);border:1px solid var(--af-border);border-radius:50px;padding:7px 12px 7px 30px;font-size:.8rem;font-family:inherit;color:#26313D;outline:none;transition:border-color .2s,box-shadow .2s;}
+.sb-search-input:focus{border-color:var(--af-accent);box-shadow:0 0 0 3px rgba(27,184,166,.12);}
+.sb-search-input::placeholder{color:var(--af-gray-light);}
+.sb-tabs{display:flex;padding:0 14px;border-bottom:1px solid var(--af-border);}
+.sb-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 0;margin-right:14px;font-size:.75rem;font-weight:600;color:var(--af-gray);cursor:pointer;display:flex;align-items:center;gap:5px;transition:color .15s,border-color .15s;outline:none;white-space:nowrap;}
+.sb-tab.active{color:var(--af-primary);border-bottom-color:var(--af-accent);}
+.sb-tab:hover:not(.active){color:var(--af-primary);}
+.tab-badge{background:var(--af-accent);color:#fff;border-radius:50px;font-size:.62rem;font-weight:700;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-variant-numeric:tabular-nums;}
+.sb-tab:not(.active) .tab-badge{background:var(--af-gray-light);}
+.conv-list{flex:1;overflow-y:auto;padding:4px 0;}
+.conv-list::-webkit-scrollbar{width:3px;}
+.conv-list::-webkit-scrollbar-thumb{background:var(--af-border);border-radius:2px;}
+.conv-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;transition:background .12s;border-left:3px solid transparent;}
+.conv-item:hover{background:var(--af-hover);}
+.conv-item.active{background:var(--af-primary-soft);border-left-color:var(--af-accent);}
+.conv-av{width:38px;height:38px;border-radius:50%;background:var(--af-primary-soft);color:var(--af-primary);font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+.ch-badge{position:absolute;bottom:-1px;right:-1px;width:15px;height:15px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;}
+.ch-badge.wa{background:#25D366;}
+.ch-badge.web{background:var(--af-primary);}
+.conv-body{flex:1;min-width:0;}
+.conv-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:2px;}
+.conv-name{font-weight:600;font-size:.82rem;color:#26313D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.conv-time{font-size:.68rem;color:var(--af-gray-light);flex-shrink:0;font-variant-numeric:tabular-nums;}
+.conv-bot{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.conv-prev{font-size:.75rem;color:var(--af-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.conv-unread{background:var(--af-accent);color:#fff;border-radius:50px;font-size:.62rem;font-weight:700;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.status-chip{font-size:.67rem;font-weight:600;padding:2px 7px;border-radius:50px;flex-shrink:0;}
+.status-chip.waiting{background:rgba(245,158,11,.12);color:#B45309;}
+.status-chip.resolved{background:rgba(148,163,184,.15);color:var(--af-gray);}
+
+/* ── CHAT MAIN ── */
+.chat-main{display:flex;flex-direction:column;overflow:hidden;background:var(--af-bg-light);}
+.chat-header{background:#fff;border-bottom:1px solid var(--af-border);padding:10px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.ch-av{width:36px;height:36px;border-radius:50%;background:var(--af-primary-soft);color:var(--af-primary);font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ch-info{flex:1;min-width:0;}
+.ch-name{font-weight:700;font-size:.88rem;color:var(--af-primary);}
+.ch-meta{display:flex;align-items:center;gap:10px;margin-top:2px;flex-wrap:wrap;}
+.ch-meta-item{display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--af-gray);font-weight:500;}
+.ch-meta-item svg{width:11px;height:11px;fill:currentColor;flex-shrink:0;}
+.ch-actions{display:flex;align-items:center;gap:6px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--af-border);background:transparent;color:var(--af-gray);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,color .12s;outline:none;}
+.icon-btn svg{width:14px;height:14px;fill:currentColor;}
+.icon-btn:hover{background:var(--af-hover);color:var(--af-primary);}
+.icon-btn:focus-visible{box-shadow:0 0 0 3px rgba(27,184,166,.3);}
+.btn-resolve{background:var(--af-accent);color:#fff;border:none;border-radius:50px;padding:7px 15px;font-size:.76rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .2s,transform .12s;outline:none;white-space:nowrap;}
+.btn-resolve svg{width:13px;height:13px;fill:#fff;}
+.btn-resolve:hover{background:var(--af-accent-dark);transform:translateY(-1px);}
+.btn-resolve:focus-visible{box-shadow:0 0 0 3px rgba(27,184,166,.35);}
+
+/* Messages */
+.chat-msgs{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:10px;}
+.chat-msgs::-webkit-scrollbar{width:4px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--af-border);border-radius:2px;}
+.msg-row{display:flex;gap:7px;max-width:74%;}
+.msg-row.agent{align-self:flex-end;flex-direction:row-reverse;}
+.msg-row.customer{align-self:flex-start;}
+.msg-av{width:26px;height:26px;border-radius:50%;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end;}
+.msg-row.agent .msg-av{background:var(--af-accent);color:#fff;}
+.msg-row.customer .msg-av{background:var(--af-primary-soft);color:var(--af-primary);}
+.msg-wrap{display:flex;flex-direction:column;gap:3px;}
+.msg-row.agent .msg-wrap{align-items:flex-end;}
+.msg-row.customer .msg-wrap{align-items:flex-start;}
+.msg-bubble{padding:9px 13px;border-radius:14px;font-size:.82rem;line-height:1.55;max-width:100%;word-break:break-word;}
+.msg-row.agent .msg-bubble{background:var(--af-primary);color:#fff;border-bottom-right-radius:3px;}
+.msg-row.customer .msg-bubble{background:#fff;color:#26313D;border:1px solid var(--af-border);border-bottom-left-radius:3px;box-shadow:0 1px 4px rgba(11,61,107,.05);}
+.msg-time{font-size:.63rem;color:var(--af-gray-light);font-variant-numeric:tabular-nums;}
+.date-divider{display:flex;align-items:center;gap:10px;align-self:stretch;margin:4px 0;}
+.date-divider::before,.date-divider::after{content:'';flex:1;height:1px;background:var(--af-border);}
+.date-divider span{font-size:.68rem;color:var(--af-gray-light);font-weight:500;white-space:nowrap;}
+.typing-row{display:flex;gap:7px;align-self:flex-start;}
+.typing-bubble{padding:9px 14px;background:#fff;border:1px solid var(--af-border);border-radius:14px;border-bottom-left-radius:3px;display:flex;gap:4px;align-items:center;box-shadow:0 1px 4px rgba(11,61,107,.05);}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--af-gray-light);animation:tp 1.3s ease-in-out infinite;}
+.typing-dot:nth-child(2){animation-delay:.2s;}
+.typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes tp{0%,60%,100%{opacity:.3;transform:scale(.9);}30%{opacity:1;transform:scale(1.15);}}
+
+/* Chat input */
+.chat-input-area{background:#fff;border-top:1px solid var(--af-border);padding:10px 14px;flex-shrink:0;}
+.qr-bar{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
+.qr-bar::-webkit-scrollbar{display:none;}
+.qr-chip{background:var(--af-primary-soft);color:var(--af-primary);border:1px solid rgba(11,61,107,.12);border-radius:50px;padding:4px 11px;font-size:.71rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .12s,border-color .12s;outline:none;flex-shrink:0;}
+.qr-chip:hover{background:var(--af-accent);color:#fff;border-color:var(--af-accent);}
+.qr-chip:focus-visible{box-shadow:0 0 0 3px rgba(27,184,166,.3);}
+.qr-chip.manage{background:transparent;color:var(--af-gray);border-color:var(--af-border);}
+.qr-chip.manage:hover{background:var(--af-hover);color:var(--af-primary);border-color:var(--af-border);}
+.chat-input-row{display:flex;align-items:flex-end;gap:7px;}
+.chat-ta{flex:1;background:var(--af-bg-light);border:1px solid var(--af-border);border-radius:12px;padding:9px 13px;font-size:.82rem;font-family:inherit;color:#26313D;resize:none;min-height:42px;max-height:110px;outline:none;transition:border-color .2s,box-shadow .2s;line-height:1.5;}
+.chat-ta:focus{border-color:var(--af-accent);box-shadow:0 0 0 3px rgba(27,184,166,.12);background:#fff;}
+.chat-ta::placeholder{color:var(--af-gray-light);}
+.send-btn{width:42px;height:42px;border-radius:50%;background:var(--af-accent);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s,transform .12s;flex-shrink:0;outline:none;}
+.send-btn svg{width:16px;height:16px;fill:#fff;}
+.send-btn:hover{background:var(--af-accent-dark);transform:scale(1.05);}
+.send-btn:focus-visible{box-shadow:0 0 0 3px rgba(27,184,166,.35);}
+
+/* ── RIGHT PANEL ── */
+.right-panel{background:#fff;border-left:1px solid var(--af-border);display:flex;flex-direction:column;overflow:hidden;}
+.rp-section{border-bottom:1px solid var(--af-border);}
+.rp-section:last-child{border-bottom:none;display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.rp-head{padding:14px 15px 8px;display:flex;align-items:center;justify-content:space-between;}
+.rp-title{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--af-gray-light);}
+.rp-action{background:none;border:none;cursor:pointer;color:var(--af-gray-light);font-size:.7rem;font-weight:600;display:flex;align-items:center;gap:4px;transition:color .12s;outline:none;padding:0;}
+.rp-action:hover{color:var(--af-accent);}
+.rp-action svg{width:11px;height:11px;fill:currentColor;}
+.cust-info{padding:0 15px 14px;}
+.cust-name{font-weight:700;font-size:.92rem;color:var(--af-primary);margin-bottom:10px;}
+.info-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.info-row:last-child{margin-bottom:0;}
+.info-icon{width:26px;height:26px;border-radius:6px;background:var(--af-primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.info-icon svg{width:13px;height:13px;fill:var(--af-primary);}
+.info-text{display:flex;flex-direction:column;}
+.info-label{font-size:.67rem;color:var(--af-gray-light);font-weight:500;line-height:1;}
+.info-value{font-size:.78rem;color:#26313D;font-weight:500;margin-top:1px;}
+/* Quick replies panel */
+.qr-panel-list{flex:1;overflow-y:auto;padding:0 12px 10px;display:flex;flex-direction:column;gap:5px;}
+.qr-panel-list::-webkit-scrollbar{width:3px;}
+.qr-panel-list::-webkit-scrollbar-thumb{background:var(--af-border);border-radius:2px;}
+.qr-pitem{background:var(--af-bg-light);border:1px solid var(--af-border);border-radius:8px;padding:8px 9px;cursor:pointer;transition:background .12s,border-color .12s;display:flex;align-items:flex-start;gap:7px;}
+.qr-pitem:hover{background:var(--af-primary-soft);border-color:rgba(11,61,107,.2);}
+.qr-pitem-body{flex:1;min-width:0;}
+.qr-pitem-label{font-size:.68rem;font-weight:700;color:var(--af-primary);margin-bottom:2px;}
+.qr-pitem-text{font-size:.72rem;color:var(--af-gray);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.qr-pitem-actions{display:flex;gap:1px;opacity:0;transition:opacity .12s;flex-shrink:0;}
+.qr-pitem:hover .qr-pitem-actions{opacity:1;}
+.qr-mini{width:20px;height:20px;border-radius:4px;border:none;background:transparent;color:var(--af-gray-light);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,color .12s;outline:none;}
+.qr-mini svg{width:11px;height:11px;fill:currentColor;}
+.qr-mini:hover{background:var(--af-border);color:var(--af-primary);}
+.qr-mini.del:hover{color:#c0392b;background:rgba(192,57,43,.08);}
+.btn-add-qr{margin:0 12px 12px;background:transparent;border:1.5px dashed var(--af-border);border-radius:8px;padding:8px;color:var(--af-gray);font-size:.76rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s,background .15s;outline:none;font-family:inherit;}
+.btn-add-qr svg{width:13px;height:13px;fill:currentColor;}
+.btn-add-qr:hover{border-color:var(--af-accent);color:var(--af-accent);background:rgba(27,184,166,.04);}
+.btn-add-qr:focus-visible{box-shadow:0 0 0 3px rgba(27,184,166,.25);}
+
+/* ── MODAL ── */
+.modal-bd{position:fixed;inset:0;background:rgba(11,32,56,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
+.modal-bd.open{opacity:1;pointer-events:auto;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(11,61,107,.2);transform:scale(.96) translateY(8px);transition:transform .22s ease;}
+.modal-bd.open .modal{transform:scale(1) translateY(0);}
+.modal-hd{padding:20px 22px 14px;border-bottom:1px solid var(--af-border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-weight:700;font-size:.96rem;color:var(--af-primary);display:flex;align-items:center;gap:8px;}
+.modal-title svg{width:16px;height:16px;fill:var(--af-accent);}
+.modal-close{width:28px;height:28px;border-radius:6px;border:none;background:var(--af-bg-light);color:var(--af-gray);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s;font-size:15px;outline:none;font-family:inherit;}
+.modal-close:hover{background:var(--af-border);}
+.modal-body{padding:18px 22px;}
+.form-group{margin-bottom:14px;}
+.form-group:last-child{margin-bottom:0;}
+.form-label{display:block;font-size:.76rem;font-weight:700;color:var(--af-primary);margin-bottom:5px;}
+.form-input{width:100%;background:var(--af-bg-light);border:1px solid var(--af-border);border-radius:8px;padding:9px 11px;font-size:.82rem;font-family:inherit;color:#26313D;outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-input:focus{border-color:var(--af-accent);box-shadow:0 0 0 3px rgba(27,184,166,.12);background:#fff;}
+textarea.form-input{resize:vertical;min-height:76px;line-height:1.5;}
+.char-count{font-size:.68rem;color:var(--af-gray-light);text-align:right;margin-top:3px;font-variant-numeric:tabular-nums;}
+.modal-ft{padding:12px 22px 20px;display:flex;gap:8px;justify-content:flex-end;}
+.btn-cancel{background:transparent;border:1px solid var(--af-border);border-radius:50px;padding:7px 16px;font-size:.8rem;font-weight:600;color:var(--af-gray);cursor:pointer;transition:background .12s;outline:none;font-family:inherit;}
+.btn-cancel:hover{background:var(--af-bg-light);}
+.btn-save{background:var(--af-accent);border:none;border-radius:50px;padding:7px 18px;font-size:.8rem;font-weight:700;color:#fff;cursor:pointer;transition:background .18s;outline:none;font-family:inherit;}
+.btn-save:hover{background:var(--af-accent-dark);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(12px);background:#26313D;color:#fff;padding:9px 18px;border-radius:50px;font-size:.8rem;font-weight:500;z-index:400;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:7px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast svg{width:14px;height:14px;fill:#fff;flex-shrink:0;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1060px){.dashboard{grid-template-columns:var(--sidebar-w) 1fr;} .right-panel{display:none;}}
+@media(max-width:680px){
+  .dashboard{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .sidebar.mob-show{display:flex;position:absolute;inset:56px 0 0 0;z-index:50;}
+  .chat-main.mob-hide{display:none;}
+  .tb-stats{display:none;}
+  .topbar{gap:10px;}
+  .tb-div:first-of-type{display:none;}
+  .tb-label{display:none;}
+}
+</style>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-logo">
+    <div class="tb-logo-icon">
+      <svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 2a5 5 0 1 1 0 10A5 5 0 0 1 8 3zm0 1.5a.75.75 0 0 0-.75.75v3.44l-1.97 1.97a.75.75 0 1 0 1.06 1.06l2.25-2.25a.75.75 0 0 0 .22-.53V5.25A.75.75 0 0 0 8 4.5z"/></svg>
+    </div>
+    Aurora Financiera
+  </div>
+  <div class="tb-div"></div>
+  <span class="tb-label">Panel de Agente</span>
+  <div class="tb-spacer"></div>
+  <div class="tb-stats">
+    <div class="tb-stat">
+      <span class="tb-dot" style="background:var(--s-busy)"></span>
+      <span>En espera</span><b id="statWaiting">3</b>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-dot" style="background:var(--s-online)"></span>
+      <span>Activas</span><b id="statActive">2</b>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-dot" style="background:var(--af-gray-light)"></span>
+      <span>Resueltas hoy</span><b id="statResolved">7</b>
+    </div>
+  </div>
+  <div class="agent-tb" id="agentTbWrap">
+    <div class="agent-av" id="agentAvToggle" role="button" tabindex="0" aria-label="Cambiar estado">
+      CR<span class="sdot" id="agentDot"></span>
+    </div>
+    <div class="agent-meta">
+      <span class="agent-name">Carlos Ramírez</span>
+      <button class="status-toggle-btn" id="statusToggleBtn">
+        <span class="sdot-sm" id="statusDotSm" style="background:var(--s-online)"></span>
+        <span id="statusLabel">Disponible</span>
+        <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor"><path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
+      </button>
+    </div>
+    <div class="status-menu" id="statusMenu">
+      <div class="sm-opt active" data-status="online"><span class="sdot-sm" style="background:var(--s-online)"></span>Disponible</div>
+      <div class="sm-opt" data-status="busy"><span class="sdot-sm" style="background:var(--s-busy)"></span>Ocupado</div>
+      <div class="sm-opt" data-status="offline"><span class="sdot-sm" style="background:var(--s-offline)"></span>No disponible</div>
+    </div>
+  </div>
+</header>
+
+<!-- DASHBOARD GRID -->
+<div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-search">
+      <div class="sb-search-wrap">
+        <svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.117-.098zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+        <input class="sb-search-input" id="searchInput" type="search" placeholder="Buscar conversación…">
+      </div>
+    </div>
+    <div class="sb-tabs">
+      <button class="sb-tab active" data-tab="active">Activas <span class="tab-badge">2</span></button>
+      <button class="sb-tab" data-tab="waiting">En espera <span class="tab-badge">3</span></button>
+      <button class="sb-tab" data-tab="resolved">Resueltas <span class="tab-badge" style="background:var(--af-gray-light)">7</span></button>
+    </div>
+    <div class="conv-list" id="convList"></div>
+  </aside>
+
+  <!-- CHAT MAIN -->
+  <main class="chat-main" id="chatMain">
+    <div class="chat-header" id="chatHeader">
+      <div class="ch-av" id="chAv">MG</div>
+      <div class="ch-info">
+        <div class="ch-name" id="chName">María González</div>
+        <div class="ch-meta" id="chMeta">
+          <span class="ch-meta-item">
+            <svg viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+            WhatsApp · +57 301 234 5678
+          </span>
+          <span class="ch-meta-item">
+            <svg viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
+            Iniciada hace 9 min
+          </span>
+          <span class="ch-meta-item">
+            <svg viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.029 10 8 10c-2.029 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>
+            2 consultas previas
+          </span>
+        </div>
+      </div>
+      <div class="ch-actions">
+        <button class="icon-btn" title="Ver historial" id="btnInfo">
+          <svg viewBox="0 0 16 16"><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm0-1A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/></svg>
+        </button>
+        <button class="icon-btn" title="Transferir conversación" id="btnTransfer">
+          <svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.5 2.5A2.5 2.5 0 0 1 4 0h8a2.5 2.5 0 0 1 2.5 2.5v11a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 13.5V2.5zM4 1a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 4 15h8a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 12 1H4z"/><path d="M10.5 8a.5.5 0 0 0 0-1H5.707l1.147-1.146a.5.5 0 0 0-.708-.708l-2 2a.5.5 0 0 0 0 .708l2 2a.5.5 0 0 0 .708-.708L5.707 8H10.5z"/></svg>
+        </button>
+        <button class="btn-resolve" id="btnResolve">
+          <svg viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+          Resolver
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-msgs" id="chatMsgs"></div>
+
+    <div class="chat-input-area">
+      <div class="qr-bar" id="qrBar"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-ta" id="chatTa" placeholder="Escribe tu respuesta…" rows="1"></textarea>
+        <button class="send-btn" id="sendBtn">
+          <svg viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel" id="rightPanel">
+    <div class="rp-section">
+      <div class="rp-head"><span class="rp-title">Información del cliente</span></div>
+      <div class="cust-info" id="custInfo">
+        <div class="cust-name" id="custName">María Elena González</div>
+        <div class="info-row">
+          <div class="info-icon"><svg viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg></div>
+          <div class="info-text"><span class="info-label">Canal</span><span class="info-value" id="iCanal">WhatsApp</span></div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon"><svg viewBox="0 0 16 16"><path d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/></svg></div>
+          <div class="info-text"><span class="info-label">Contacto</span><span class="info-value" id="iContact">+57 301 234 5678</span></div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon"><svg viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg></div>
+          <div class="info-text"><span class="info-label">En conversación</span><span class="info-value" id="iDuration">9 min</span></div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon"><svg viewBox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/><path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8zm0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-3-5a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0zM2 8a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0zm0 2.5a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0z"/></svg></div>
+          <div class="info-text"><span class="info-label">Consultas previas</span><span class="info-value" id="iPrevConsults">2</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="rp-section">
+      <div class="rp-head">
+        <span class="rp-title">Respuestas rápidas</span>
+        <button class="rp-action" id="btnManageQR">
+          <svg viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>
+          Gestionar
+        </button>
+      </div>
+      <div class="qr-panel-list" id="qrPanelList"></div>
+      <button class="btn-add-qr" id="btnAddQR">
+        <svg viewBox="0 0 16 16"><path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
+        Nueva respuesta rápida
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bd" id="modalBd" role="dialog" aria-modal="true" aria-labelledby="modalTitleText">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">
+        <svg viewBox="0 0 16 16"><path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z"/></svg>
+        <span id="modalTitleText">Nueva respuesta rápida</span>
+      </span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="qrLabelInput">Etiqueta (nombre corto)</label>
+        <input class="form-input" id="qrLabelInput" type="text" placeholder="Ej: Saludo inicial" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="qrTextInput">Texto del mensaje</label>
+        <textarea class="form-input" id="qrTextInput" placeholder="Escribe el mensaje completo…" maxlength="400"></textarea>
+        <div class="char-count"><span id="charCount">0</span> / 400</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" id="btnCancel">Cancelar</button>
+      <button class="btn-save" id="btnSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+/* ═══════ DATA ═══════ */
+const CONVS = [
+  {id:1,name:'María González',initials:'MG',fullName:'María Elena González',channel:'whatsapp',contact:'+57 301 234 5678',status:'active',unread:2,time:'14:29',preview:'Sí, por favor. ¿Cuánto es el monto mínimo?',duration:'9 min',prevConsults:2,
+    msgs:[
+      {type:'customer',text:'Buenas tardes, me gustaría información sobre los CDT que manejan en Aurora Financiera.',time:'14:23'},
+      {type:'agent',text:'¡Buenas tardes! Habla con Carlos Ramírez, asesor de Aurora Financiera. Con mucho gusto le explico sobre nuestros CDT. ¿Para cuánto tiempo está pensando en invertir?',time:'14:24'},
+      {type:'customer',text:'Estoy pensando en 180 días, ¿cuál sería la tasa de rendimiento?',time:'14:26'},
+      {type:'agent',text:'Para un CDT a 180 días manejamos una tasa del 9.8% E.A. Si el monto es superior a $10.000.000, la tasa mejora al 10.2% E.A. ¿Le interesaría conocer los requisitos para abrirlo?',time:'14:27'},
+      {type:'customer',text:'Sí, por favor. ¿Cuánto es el monto mínimo?',time:'14:29'},
+    ]
+  },
+  {id:2,name:'Roberto Peñaloza',initials:'RP',fullName:'Roberto Peñaloza Herrera',channel:'web',contact:'Web chat',status:'active',unread:0,time:'14:15',preview:'¿Cuáles son los requisitos para el crédito de libre inversión?',duration:'23 min',prevConsults:0,
+    msgs:[
+      {type:'customer',text:'Hola, buenas tardes. Quisiera saber cuáles son los requisitos para solicitar un crédito de libre inversión.',time:'13:52'},
+      {type:'agent',text:'¡Buenas tardes, Roberto! Con gusto le indico. Para el crédito de libre inversión necesitará: ser asociado activo, cédula de ciudadanía, comprobantes de ingresos de los últimos 3 meses y llenar el formulario de solicitud.',time:'13:55'},
+      {type:'customer',text:'¿Cuáles son los requisitos para el crédito de libre inversión?',time:'14:15'},
+    ]
+  },
+  {id:3,name:'Ana Lucía Vargas',initials:'ALV',fullName:'Ana Lucía Vargas Moreno',channel:'whatsapp',contact:'+57 315 887 2341',status:'waiting',unread:1,time:'13:58',preview:'Quiero consultar mi saldo de ahorros por favor',duration:'–',prevConsults:5,
+    msgs:[
+      {type:'customer',text:'Buenas tardes, quiero consultar mi saldo de ahorros por favor.',time:'13:58'},
+    ]
+  },
+  {id:4,name:'Luz Marina Ospina',initials:'LO',fullName:'Luz Marina Ospina Ríos',channel:'web',contact:'Web chat',status:'waiting',unread:2,time:'14:01',preview:'Necesito información sobre cómo asociarme a la cooperativa',duration:'–',prevConsults:0,
+    msgs:[
+      {type:'customer',text:'¡Hola! Necesito información sobre cómo asociarme a la cooperativa Aurora Financiera.',time:'14:01'},
+      {type:'customer',text:'¿Hay algún requisito de edad mínima?',time:'14:03'},
+    ]
+  },
+  {id:5,name:'Ferney Castillo',initials:'FC',fullName:'Ferney Castillo Díaz',channel:'web',contact:'Web chat',status:'resolved',unread:0,time:'12:30',preview:'Muchas gracias por la información, muy amable.',duration:'14 min',prevConsults:1,
+    msgs:[
+      {type:'customer',text:'Quiero saber si puedo hacer un retiro parcial de mi CDT antes de que venza.',time:'12:16'},
+      {type:'agent',text:'Claro que sí, Ferney. Puede hacer un retiro parcial de su CDT; sin embargo, esto generará un ajuste en la tasa de interés según el tiempo transcurrido. ¿Le gustaría que le calculemos el valor exacto?',time:'12:18'},
+      {type:'customer',text:'Muchas gracias por la información, muy amable.',time:'12:30'},
+    ]
+  },
+];
+
+const DEFAULT_QR = [
+  {id:1,label:'Saludo',text:'¡Buenas tardes! Habla con Carlos Ramírez, asesor de Aurora Financiera. ¿En qué le puedo ayudar hoy?'},
+  {id:2,label:'Solicitar cédula',text:'Con mucho gusto le ayudo. ¿Me podría indicar su número de cédula para verificar su información?'},
+  {id:3,label:'Un momento',text:'Voy a revisar su caso. Un momento por favor, no tardo más de un par de minutos.'},
+  {id:4,label:'Despedida',text:'¡Ha sido un placer atenderle! Recuerde que estamos disponibles 24/7 a través de nuestros canales digitales.'},
+  {id:5,label:'Más información',text:'Para mayor información puede llamarnos al 018000-AURORA o visitar nuestra página web aurora.coop.co'},
+  {id:6,label:'Transferir',text:'Voy a transferirle con un especialista que podrá darle información más detallada sobre este tema. Un momento.'},
+];
+
+/* ═══════ STATE ═══════ */
+let activeConvId = 1;
+let currentTab = 'active';
+let currentStatus = 'online';
+let editingQRId = null;
+let nextQRId = 10;
+let searchQuery = '';
+
+function loadQR(){
+  try{ const s=localStorage.getItem('af_qr'); return s?JSON.parse(s):[...DEFAULT_QR]; }
+  catch{ return [...DEFAULT_QR]; }
+}
+function saveQR(){ try{ localStorage.setItem('af_qr',JSON.stringify(quickReplies)); }catch{} }
+
+let quickReplies = loadQR();
+
+/* ═══════ HELPERS ═══════ */
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+function now(){
+  const d=new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+/* ═══════ CONVERSATIONS ═══════ */
+function filteredConvs(){
+  return CONVS.filter(c=>{
+    const matchTab = c.status===currentTab;
+    const matchSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchTab && matchSearch;
+  });
+}
+
+function renderConvList(){
+  const el=document.getElementById('convList');
+  const list=filteredConvs();
+  if(!list.length){
+    el.innerHTML='<div style="padding:24px 16px;text-align:center;color:var(--af-gray-light);font-size:.8rem;">Sin conversaciones</div>';
+    return;
+  }
+  el.innerHTML=list.map(c=>`
+    <div class="conv-item${c.id===activeConvId?' active':''}" data-id="${c.id}" role="button" tabindex="0" aria-label="Conversación con ${esc(c.name)}">
+      <div class="conv-av">
+        ${esc(c.initials)}
+        <span class="ch-badge ${c.channel==='whatsapp'?'wa':'web'}">${c.channel==='whatsapp'?'W':'@'}</span>
+      </div>
+      <div class="conv-body">
+        <div class="conv-top">
+          <span class="conv-name">${esc(c.name)}</span>
+          <span class="conv-time">${esc(c.time)}</span>
+        </div>
+        <div class="conv-bot">
+          <span class="conv-prev">${esc(c.preview)}</span>
+          ${c.unread?`<span class="conv-unread">${c.unread}</span>`:''}
+          ${c.status==='waiting'?'<span class="status-chip waiting">En espera</span>':''}
+          ${c.status==='resolved'?'<span class="status-chip resolved">Resuelta</span>':''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.conv-item').forEach(item=>{
+    const click=()=>selectConv(parseInt(item.dataset.id));
+    item.addEventListener('click',click);
+    item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click();}});
+  });
+}
+
+function selectConv(id){
+  const conv=CONVS.find(c=>c.id===id);
+  if(!conv)return;
+  conv.unread=0;
+  activeConvId=id;
+  renderConvList();
+  renderChat(conv);
+  renderCustomerInfo(conv);
+}
+
+/* ═══════ CHAT ═══════ */
+function renderChat(conv){
+  const msgsEl=document.getElementById('chatMsgs');
+  // header
+  document.getElementById('chAv').textContent=conv.initials;
+  document.getElementById('chName').textContent=conv.name;
+
+  const chIcon = conv.channel==='whatsapp'
+    ? '<svg viewBox="0 0 16 16" style="width:11px;height:11px;fill:currentColor"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592z"/></svg>'
+    : '<svg viewBox="0 0 16 16" style="width:11px;height:11px;fill:currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 5h2.355V1.077zM4.09 5a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4.5c.3.156.622.293.957.41A9.75 9.75 0 0 1 4.09 5zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.958 6.958 0 0 0-.656 2.5h2.49zM4.847 8.5a12.848 12.848 0 0 0-.338 2.5H7.5v-2.5H4.847zm2.653 3.5v3.077c-.67-.204-1.335-.82-1.887-1.855A8 8 0 0 1 5.145 11H7.5zm1 0v3.077c.67-.204 1.335-.82 1.887-1.855A8 8 0 0 0 10.855 11H8.5zm1-1v-2.5h2.653a12.848 12.848 0 0 1-.338 2.5H8.5zm3.653-3.5h-2.49c.03-.877-.138-1.718-.312-2.5h2.802a6.958 6.958 0 0 1 0 2.5zm-3.653-3.5H8.5V1.077c.67.204 1.335.82 1.887 1.855A7.97 7.97 0 0 1 10.855 5H8.5z"/></svg>';
+
+  document.getElementById('chMeta').innerHTML=`
+    <span class="ch-meta-item">${chIcon} ${conv.channel==='whatsapp'?'WhatsApp · '+conv.contact:'Web chat'}</span>
+    <span class="ch-meta-item"><svg viewBox="0 0 16 16" style="width:11px;height:11px;fill:currentColor"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg> ${conv.duration!=='–'?'Iniciada hace '+conv.duration:'En espera'}</span>
+    <span class="ch-meta-item"><svg viewBox="0 0 16 16" style="width:11px;height:11px;fill:currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg> ${conv.prevConsults} consultas previas</span>
+  `;
+
+  // messages
+  msgsEl.innerHTML='<div class="date-divider"><span>Hoy, 26 de junio de 2026</span></div>';
+  conv.msgs.forEach(m=>{
+    const initials = m.type==='agent'?'CR':conv.initials;
+    msgsEl.innerHTML+=`
+      <div class="msg-row ${m.type}">
+        <div class="msg-av">${esc(initials)}</div>
+        <div class="msg-wrap">
+          <div class="msg-bubble">${esc(m.text)}</div>
+          <span class="msg-time">${esc(m.time)}</span>
+        </div>
+      </div>`;
+  });
+  msgsEl.scrollTop=msgsEl.scrollHeight;
+}
+
+function renderCustomerInfo(conv){
+  document.getElementById('custName').textContent=conv.fullName;
+  document.getElementById('iCanal').textContent=conv.channel==='whatsapp'?'WhatsApp':'Web chat';
+  document.getElementById('iContact').textContent=conv.contact;
+  document.getElementById('iDuration').textContent=conv.duration!=='–'?conv.duration:'Sin iniciar';
+  document.getElementById('iPrevConsults').textContent=conv.prevConsults;
+}
+
+function sendMessage(){
+  const ta=document.getElementById('chatTa');
+  const text=ta.value.trim();
+  if(!text)return;
+  const conv=CONVS.find(c=>c.id===activeConvId);
+  if(!conv)return;
+  const t=now();
+  conv.msgs.push({type:'agent',text,time:t});
+  conv.preview=text;
+  conv.time=t;
+  ta.value='';
+  ta.style.height='42px';
+  const msgsEl=document.getElementById('chatMsgs');
+  msgsEl.innerHTML+=`
+    <div class="msg-row agent">
+      <div class="msg-av">CR</div>
+      <div class="msg-wrap">
+        <div class="msg-bubble">${esc(text)}</div>
+        <span class="msg-time">${t}</span>
+      </div>
+    </div>`;
+  msgsEl.scrollTop=msgsEl.scrollHeight;
+  renderConvList();
+}
+
+/* ═══════ QUICK REPLIES ═══════ */
+function renderQRBar(){
+  const bar=document.getElementById('qrBar');
+  bar.innerHTML=quickReplies.map(qr=>`
+    <button class="qr-chip" data-id="${qr.id}" title="${esc(qr.text)}">${esc(qr.label)}</button>
+  `).join('')+'<button class="qr-chip manage" id="btnManageQRBar">⚙ Gestionar</button>';
+  bar.querySelectorAll('.qr-chip:not(.manage)').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const qr=quickReplies.find(q=>q.id===parseInt(btn.dataset.id));
+      if(!qr)return;
+      const ta=document.getElementById('chatTa');
+      ta.value=qr.text;
+      ta.focus();
+      autoResizeTa(ta);
+    });
+  });
+  const manageBtn=document.getElementById('btnManageQRBar');
+  if(manageBtn)manageBtn.addEventListener('click',openModal);
+}
+
+function renderQRPanel(){
+  const list=document.getElementById('qrPanelList');
+  if(!quickReplies.length){
+    list.innerHTML='<div style="padding:12px;text-align:center;color:var(--af-gray-light);font-size:.77rem;">Sin respuestas configuradas</div>';
+    return;
+  }
+  list.innerHTML=quickReplies.map(qr=>`
+    <div class="qr-pitem" data-id="${qr.id}">
+      <div class="qr-pitem-body">
+        <div class="qr-pitem-label">${esc(qr.label)}</div>
+        <div class="qr-pitem-text">${esc(qr.text)}</div>
+      </div>
+      <div class="qr-pitem-actions">
+        <button class="qr-mini edit-qr" data-id="${qr.id}" title="Editar" aria-label="Editar ${esc(qr.label)}">
+          <svg viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>
+        </button>
+        <button class="qr-mini del delete-qr" data-id="${qr.id}" title="Eliminar" aria-label="Eliminar ${esc(qr.label)}">
+          <svg viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5z"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.qr-pitem').forEach(item=>{
+    item.addEventListener('click',e=>{
+      if(e.target.closest('.qr-mini'))return;
+      const qr=quickReplies.find(q=>q.id===parseInt(item.dataset.id));
+      if(!qr)return;
+      const ta=document.getElementById('chatTa');
+      ta.value=qr.text;
+      ta.focus();
+      autoResizeTa(ta);
+    });
+  });
+  list.querySelectorAll('.edit-qr').forEach(btn=>{
+    btn.addEventListener('click',e=>{e.stopPropagation();openModal(parseInt(btn.dataset.id));});
+  });
+  list.querySelectorAll('.delete-qr').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const id=parseInt(btn.dataset.id);
+      quickReplies=quickReplies.filter(q=>q.id!==id);
+      saveQR();
+      renderQRBar();
+      renderQRPanel();
+      showToast('Respuesta eliminada');
+    });
+  });
+}
+
+/* ═══════ MODAL ═══════ */
+function openModal(editId){
+  editingQRId = typeof editId==='number' ? editId : null;
+  const modal=document.getElementById('modalBd');
+  const titleEl=document.getElementById('modalTitleText');
+  const labelIn=document.getElementById('qrLabelInput');
+  const textIn=document.getElementById('qrTextInput');
+  const cc=document.getElementById('charCount');
+  if(editingQRId){
+    const qr=quickReplies.find(q=>q.id===editingQRId);
+    titleEl.textContent='Editar respuesta rápida';
+    labelIn.value=qr?qr.label:'';
+    textIn.value=qr?qr.text:'';
+    cc.textContent=textIn.value.length;
+  } else {
+    titleEl.textContent='Nueva respuesta rápida';
+    labelIn.value='';
+    textIn.value='';
+    cc.textContent='0';
+  }
+  modal.classList.add('open');
+  setTimeout(()=>labelIn.focus(),50);
+}
+
+function closeModal(){
+  document.getElementById('modalBd').classList.remove('open');
+  editingQRId=null;
+}
+
+function saveModal(){
+  const label=document.getElementById('qrLabelInput').value.trim();
+  const text=document.getElementById('qrTextInput').value.trim();
+  if(!label||!text){showToast('Completa la etiqueta y el texto');return;}
+  if(editingQRId){
+    const qr=quickReplies.find(q=>q.id===editingQRId);
+    if(qr){qr.label=label;qr.text=text;}
+    showToast('Respuesta actualizada');
+  } else {
+    quickReplies.push({id:nextQRId++,label,text});
+    showToast('Respuesta guardada');
+  }
+  saveQR();
+  closeModal();
+  renderQRBar();
+  renderQRPanel();
+}
+
+/* ═══════ STATUS ═══════ */
+const STATUS_MAP={
+  online:{label:'Disponible',color:'var(--s-online)'},
+  busy:{label:'Ocupado',color:'var(--s-busy)'},
+  offline:{label:'No disponible',color:'var(--s-offline)'},
+};
+function setStatus(s){
+  currentStatus=s;
+  const map=STATUS_MAP[s];
+  document.getElementById('statusLabel').textContent=map.label;
+  document.getElementById('statusDotSm').style.background=map.color;
+  document.getElementById('agentDot').style.background=map.color;
+  document.querySelectorAll('.sm-opt').forEach(o=>o.classList.toggle('active',o.dataset.status===s));
+  document.getElementById('statusMenu').classList.remove('open');
+  showToast('Estado: '+map.label);
+}
+
+/* ═══════ TABS ═══════ */
+function setTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  if(tab!=='active'){ activeConvId=-1; }
+  renderConvList();
+}
+
+/* ═══════ AUTO-RESIZE TEXTAREA ═══════ */
+function autoResizeTa(ta){
+  ta.style.height='42px';
+  ta.style.height=Math.min(ta.scrollHeight,110)+'px';
+}
+
+/* ═══════ INIT ═══════ */
+function init(){
+  // initial render
+  renderConvList();
+  const firstConv=CONVS.find(c=>c.id===activeConvId);
+  if(firstConv){ renderChat(firstConv); renderCustomerInfo(firstConv); }
+  renderQRBar();
+  renderQRPanel();
+
+  // send
+  document.getElementById('sendBtn').addEventListener('click',sendMessage);
+  document.getElementById('chatTa').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+  });
+  document.getElementById('chatTa').addEventListener('input',e=>autoResizeTa(e.target));
+
+  // quick replies manage buttons
+  document.getElementById('btnManageQR').addEventListener('click',()=>openModal());
+  document.getElementById('btnAddQR').addEventListener('click',()=>openModal());
+
+  // modal
+  document.getElementById('modalClose').addEventListener('click',closeModal);
+  document.getElementById('btnCancel').addEventListener('click',closeModal);
+  document.getElementById('btnSave').addEventListener('click',saveModal);
+  document.getElementById('modalBd').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+  document.getElementById('qrTextInput').addEventListener('input',e=>{
+    document.getElementById('charCount').textContent=e.target.value.length;
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+  // status
+  document.getElementById('statusToggleBtn').addEventListener('click',e=>{
+    e.stopPropagation();
+    document.getElementById('statusMenu').classList.toggle('open');
+  });
+  document.getElementById('agentAvToggle').addEventListener('click',e=>{
+    e.stopPropagation();
+    document.getElementById('statusMenu').classList.toggle('open');
+  });
+  document.getElementById('agentAvToggle').addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();document.getElementById('statusMenu').classList.toggle('open');}
+  });
+  document.querySelectorAll('.sm-opt').forEach(opt=>{
+    opt.addEventListener('click',()=>setStatus(opt.dataset.status));
+  });
+  document.addEventListener('click',()=>document.getElementById('statusMenu').classList.remove('open'));
+
+  // tabs
+  document.querySelectorAll('.sb-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>setTab(tab.dataset.tab));
+  });
+
+  // search
+  document.getElementById('searchInput').addEventListener('input',e=>{
+    searchQuery=e.target.value;
+    renderConvList();
+  });
+
+  // resolve
+  document.getElementById('btnResolve').addEventListener('click',()=>{
+    const conv=CONVS.find(c=>c.id===activeConvId);
+    if(!conv)return;
+    if(conv.status==='resolved'){showToast('Esta conversación ya está resuelta');return;}
+    conv.status='resolved';
+    conv.unread=0;
+    showToast('Conversación resuelta ✓');
+    if(currentTab==='active'){ activeConvId=-1; renderConvList(); }
+  });
+
+  // transfer
+  document.getElementById('btnTransfer').addEventListener('click',()=>{
+    showToast('Funcionalidad de transferencia próximamente');
+  });
+
+  // info
+  document.getElementById('btnInfo').addEventListener('click',()=>{
+    const rp=document.getElementById('rightPanel');
+    rp.style.display=rp.style.display==='none'?'flex':'flex';
+    showToast('Panel de información del cliente');
+  });
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
