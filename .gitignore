@@ -33,6 +33,9 @@ db.sqlite3
 *.docx
 /0_Super_Agente_Orquestador_Final.json
 
+# === Herramientas de desarrollo (config local de Claude Code) ===
+.claude/
+
 # === Sistema ===
 .DS_Store
 Thumbs.db
