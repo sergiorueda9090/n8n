@@ -31,33 +31,75 @@ En producción se crea un `.env` nuevo directamente en la EC2 (paso 5).
 
 ---
 
-## 1. Subir el código a la EC2 (desde tu máquina local)
+## 1. Subir el código a GitHub (desde tu máquina local)
 
-Sustituye `TU_LLAVE.pem` y `IP_EC2` por los tuyos (usa la Elastic IP si tienes).
-Ubuntu AMI: el usuario suele ser `ubuntu`; en Amazon Linux es `ec2-user`.
-
-Usamos `rsync` excluyendo secretos, el entorno virtual local y las imágenes
-pesadas de la raíz (las que se sirven ya están en `static/img/`):
+El repo ya está inicializado y con el commit inicial. Créalo en GitHub y súbelo
+(ya tienes `gh` autenticado como `srueda123`):
 
 ```bash
 cd /home/srueda/Documentos/linux/aurora-financiera
-
-rsync -avz -e "ssh -i ~/.ssh/TU_LLAVE.pem" \
-  --exclude 'env/' \
-  --exclude '__pycache__/' \
-  --exclude '.env' \
-  --exclude 'n8n-bedrock-ocr_accessKeys.csv' \
-  --exclude 'db.sqlite3' \
-  --exclude '*.pem' \
-  --exclude 'staticfiles/' \
-  ./  ubuntu@IP_EC2:/tmp/aurora-src/
+gh repo create aurora-financiera --private --source=. --remote=origin --push
 ```
 
-Entra a la instancia:
+Esto crea el repo **privado**, añade el remoto `origin` y sube la rama `main`.
+Verifica: `git remote -v`
+
+> El `.gitignore` ya protege `.env` y el CSV de claves AWS: **no se suben**.
+
+---
+
+## 1-bis. Credenciales en la EC2 para clonar (Deploy Key SSH — recomendado)
+
+Como el repo es **privado**, la EC2 necesita credenciales para clonarlo. La
+forma más segura es una **Deploy Key**: un par de llaves SSH exclusivo de este
+repo y de **solo lectura** (si se filtra, no compromete tu cuenta ni otros repos).
+
+**En la EC2**, genera la llave:
+
+```bash
+ssh-keygen -t ed25519 -C "ec2-aurora-deploy" -f ~/.ssh/aurora_deploy -N ""
+cat ~/.ssh/aurora_deploy.pub      # copia TODO lo que imprime
+```
+
+**En GitHub** (navegador): repo `aurora-financiera` → **Settings** →
+**Deploy keys** → **Add deploy key** → pega la clave pública, título
+`ec2-aurora`, **NO** marques "Allow write access" → **Add key**.
+
+**En la EC2**, indica a git que use esa llave para GitHub:
+
+```bash
+cat >> ~/.ssh/config <<'EOF'
+Host github-aurora
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/aurora_deploy
+    IdentitiesOnly yes
+EOF
+chmod 600 ~/.ssh/config
+```
+
+Prueba y clona:
+
+```bash
+ssh -T git@github-aurora            # debe saludarte con tu usuario
+git clone git@github-aurora:srueda123/aurora-financiera.git /tmp/aurora-src
+```
+
+> **Alternativa (PAT por HTTPS):** en vez de la Deploy Key, en GitHub crea un
+> *Fine-grained token* de solo lectura (Settings → Developer settings →
+> Personal access tokens) con acceso a este repo, y clona con:
+> `git clone https://USUARIO:TOKEN@github.com/srueda123/aurora-financiera.git`
+> La Deploy Key es preferible en servidores.
+
+---
+
+## 1-ter. Entrar a la instancia
 
 ```bash
 ssh -i ~/.ssh/TU_LLAVE.pem ubuntu@IP_EC2
 ```
+(Ubuntu AMI usa el usuario `ubuntu`; Amazon Linux usa `ec2-user`. Usa la
+Elastic IP si tienes.)
 
 ---
 
@@ -75,12 +117,15 @@ sudo systemctl restart apache2
 
 ---
 
-## 3. Colocar el código en `/var/www/aurora`
+## 3. Clonar el código en `/var/www/aurora`
+
+Clonamos directamente ahí (dueño `ubuntu`) para que luego `git pull` actualice
+sin fricción:
 
 ```bash
-sudo mkdir -p /var/www/aurora
-sudo cp -r /tmp/aurora-src/. /var/www/aurora/
-sudo mkdir -p /var/www/html/static
+sudo mkdir -p /var/www/aurora /var/www/html/static
+sudo chown ubuntu:ubuntu /var/www/aurora /var/www/html/static
+git clone git@github-aurora:srueda123/aurora-financiera.git /var/www/aurora
 ```
 
 ---
@@ -89,9 +134,9 @@ sudo mkdir -p /var/www/html/static
 
 ```bash
 cd /var/www/aurora
-sudo python3 -m venv env
-sudo ./env/bin/pip install --upgrade pip
-sudo ./env/bin/pip install -r requirements.txt
+python3 -m venv env
+./env/bin/pip install --upgrade pip
+./env/bin/pip install -r requirements.txt
 ```
 
 > Si usarás **SQLite** (opción simple) puedes quitar `psycopg2-binary` del
@@ -102,15 +147,15 @@ sudo ./env/bin/pip install -r requirements.txt
 ## 5. Crear el `.env` de producción
 
 ```bash
-sudo cp /var/www/aurora/.env.produccion.example /var/www/aurora/.env
-sudo nano /var/www/aurora/.env
+cp /var/www/aurora/.env.produccion.example /var/www/aurora/.env
+nano /var/www/aurora/.env
 ```
 
 Rellena como mínimo:
 
 - `SECRET_KEY` → genérala:
   ```bash
-  /var/www/aurora/env/bin/python -c "import secrets;print(secrets.token_urlsafe(50))"
+  ./env/bin/python -c "import secrets;print(secrets.token_urlsafe(50))"
   ```
 - `DEBUG=False`
 - `ALLOWED_HOSTS=sruedadev.com,www.sruedadev.com,127.0.0.1`
@@ -125,23 +170,26 @@ Rellena como mínimo:
 
 ```bash
 cd /var/www/aurora
-sudo ./env/bin/python manage.py migrate
-sudo ./env/bin/python manage.py collectstatic --noinput   # -> /var/www/html/static
+./env/bin/python manage.py migrate
+./env/bin/python manage.py collectstatic --noinput   # -> /var/www/html/static
 ```
 
 (Opcional) crea un superusuario para `/admin/`:
 
 ```bash
-sudo ./env/bin/python manage.py createsuperuser
+./env/bin/python manage.py createsuperuser
 ```
 
 ---
 
-## 7. Permisos para Apache/Gunicorn (usuario `www-data`)
+## 7. Permisos
+
+El código lo maneja `ubuntu` (dueño del clon y de la Deploy Key) y Gunicorn
+corre como `ubuntu`. Apache solo necesita **leer** los estáticos:
 
 ```bash
-sudo chown -R www-data:www-data /var/www/aurora /var/www/html/static
-sudo chmod 640 /var/www/aurora/.env      # solo www-data lo lee
+chmod 600 /var/www/aurora/.env               # solo tu usuario lo lee
+chmod -R a+rX /var/www/html/static           # Apache (www-data) puede leerlos
 ```
 
 ---
@@ -231,24 +279,27 @@ sudo certbot renew --dry-run
 
 ---
 
-## 12. Actualizaciones futuras (redeploy)
+## 12. Actualizaciones futuras (redeploy con git)
 
-Desde tu máquina, vuelve a sincronizar y en la EC2 recarga:
+En tu máquina, haz commit y push de los cambios:
 
 ```bash
-# local:
-rsync -avz -e "ssh -i ~/.ssh/TU_LLAVE.pem" \
-  --exclude 'env/' --exclude '__pycache__/' --exclude '.env' \
-  --exclude 'n8n-bedrock-ocr_accessKeys.csv' --exclude 'db.sqlite3' \
-  ./  ubuntu@IP_EC2:/var/www/aurora/
+git add -A && git commit -m "..." && git push
+```
 
-# en la EC2:
+En la EC2, baja los cambios y recarga:
+
+```bash
 cd /var/www/aurora
+sudo -u www-data git pull
 sudo ./env/bin/python manage.py migrate
 sudo ./env/bin/python manage.py collectstatic --noinput
-sudo chown -R www-data:www-data /var/www/aurora /var/www/html/static
 sudo systemctl restart gunicorn-aurora
 ```
+
+> `sudo -u www-data git pull` mantiene los permisos correctos. Como el paso 3
+> clonó el repo en `/var/www/aurora`, esa carpeta ya es un repo git conectado a
+> tu `origin`.
 
 ---
 

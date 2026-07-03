@@ -73,10 +73,17 @@ const afBotMessages= document.getElementById('afBotMessages');
 const afBotAttach  = document.getElementById('afBotAttach');
 const afBotFile    = document.getElementById('afBotFile');
 const afBotMic     = document.getElementById('afBotMic');
+const afBotGeo     = document.getElementById('afBotGeo');
+const afBotMenuToggle = document.getElementById('afBotMenuToggle');
+const afBotMenu       = document.getElementById('afBotMenu');
 
 // --- Configuración del proxy (definida como data-* en el <form> de base.html) ---
-const AF_CHAT_URL = afBotForm.dataset.chatUrl;
-const AF_CSRF     = afBotForm.dataset.csrf;
+const AF_CHAT_URL  = afBotForm.dataset.chatUrl;
+const AF_RESET_URL = afBotForm.dataset.resetUrl;
+const AF_CSRF      = afBotForm.dataset.csrf;
+
+// Mensaje de bienvenida original; se restaura al iniciar cada conversación nueva.
+const AF_WELCOME_HTML = afBotMessages.innerHTML;
 
 // El chat_id lo administra Django desde la sesión; el JS no lo envía.
 
@@ -94,7 +101,34 @@ function afToBase64(blob){
   });
 }
 
+// Detiene cualquier proceso en curso (grabación, menú, flujos) sin tocar la conversación.
+function afCleanupState(){
+  if (afRecording) afStopRecording();
+  afCloseMenu();
+  afDocStep  = null;
+  afLocating = false;
+}
+
+// Deja la ventana en su estado inicial: solo el mensaje de bienvenida.
+function afResetUI(){
+  afCleanupState();
+  afBotMessages.innerHTML = AF_WELCOME_HTML;
+  afSetBusy(false);
+}
+
+// Pide al backend una conversación nueva (descarta el chat_id de la sesión).
+function afResetServerConversation(){
+  if (!AF_RESET_URL) return;
+  fetch(AF_RESET_URL, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': AF_CSRF },
+    credentials: 'same-origin',
+    keepalive: true
+  }).catch(function(){ /* silencioso: es solo un reinicio */ });
+}
+
 function afOpenBot(){
+  afResetUI();                       // cada apertura arranca una conversación desde cero
   afBotWindow.classList.add('is-open');
   afBotWindow.setAttribute('aria-hidden', 'false');
   afBotToggle.classList.add('is-open');
@@ -105,6 +139,8 @@ function afOpenBot(){
   afBotInput.focus();
 }
 function afCloseBot(){
+  afCleanupState();
+  afResetServerConversation();       // renueva el chat_id para la próxima apertura
   afBotWindow.classList.remove('is-open');
   afBotWindow.setAttribute('aria-hidden', 'true');
   afBotToggle.classList.remove('is-open');
@@ -119,21 +155,56 @@ afBotToggle.addEventListener('click', function(){
 });
 afBotClose.addEventListener('click', afCloseBot);
 
-// Cierra el chat con la tecla Escape
+// Cierra el menú (o, si no hay menú abierto, el chat) con la tecla Escape
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && afBotWindow.classList.contains('is-open')){
-    afCloseBot();
-  }
+  if (e.key !== 'Escape') return;
+  if (afBotMenu.classList.contains('is-open')){ afCloseMenu(); return; }
+  if (afBotWindow.classList.contains('is-open')){ afCloseBot(); }
 });
 
 function afScrollBottom(){
   afBotMessages.scrollTop = afBotMessages.scrollHeight;
 }
 
+// Escapa HTML para que el contenido del bot nunca inyecte etiquetas.
+function afEscapeHtml(s){
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Formato en línea: **negrita** -> <strong> (sobre texto ya escapado).
+function afInlineMarkdown(s){
+  return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+// Convierte un subconjunto seguro de Markdown a HTML: negrita, listas (- / *)
+// y saltos de línea. Escapa el HTML primero; solo emite etiquetas propias.
+function afRenderRich(text){
+  const lines = afEscapeHtml(String(text).replace(/\r\n/g, '\n')).split('\n');
+  let html = '';
+  let inList = false;
+  lines.forEach(function(raw){
+    const line = raw.trim();
+    const item = line.match(/^[-*]\s+(.*)$/);
+    if (item){
+      if (!inList){ html += '<ul class="af-bot-list">'; inList = true; }
+      html += '<li>' + afInlineMarkdown(item[1]) + '</li>';
+      return;
+    }
+    if (inList){ html += '</ul>'; inList = false; }
+    if (line !== '') html += '<div>' + afInlineMarkdown(line) + '</div>';
+  });
+  if (inList) html += '</ul>';
+  return html;
+}
+
 function afAddMessage(text, sender){
   const bubble = document.createElement('div');
-  bubble.className = 'af-bot-msg ' + (sender === 'user' ? 'af-bot-msg-user' : 'af-bot-msg-bot');
-  bubble.textContent = text;
+  const isUser = sender === 'user';
+  bubble.className = 'af-bot-msg ' + (isUser ? 'af-bot-msg-user' : 'af-bot-msg-bot');
+  // Los mensajes del usuario van como texto plano; los del bot con formato enriquecido.
+  if (isUser){ bubble.textContent = text; }
+  else       { bubble.innerHTML = afRenderRich(text); }
   afBotMessages.appendChild(bubble);
   afScrollBottom();
   return bubble;
@@ -180,13 +251,67 @@ function afAddAudioMessage(blob){
   afScrollBottom();
 }
 
+// Muestra la ubicación compartida como burbuja del usuario (enlace a Google Maps)
+function afAddLocationMessage(lat, lng){
+  const bubble = document.createElement('div');
+  bubble.className = 'af-bot-msg af-bot-msg-user af-bot-msg-geo';
+  const link = document.createElement('a');
+  link.href = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.innerHTML = '<i class="bi bi-geo-alt-fill"></i>'
+    + '<span>Mi ubicación<small>' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</small></span>';
+  bubble.appendChild(link);
+  afBotMessages.appendChild(bubble);
+  afScrollBottom();
+}
+
 // Bloquea/desbloquea la barra de entrada mientras se espera a n8n
 function afSetBusy(busy){
-  afBotInput.disabled  = busy;
-  afBotAttach.disabled = busy;
-  afBotMic.disabled    = busy;
+  afBotInput.disabled     = busy;
+  afBotAttach.disabled    = busy;
+  afBotMic.disabled       = busy;
+  afBotGeo.disabled       = busy;
+  afBotMenuToggle.disabled= busy;
   afBotForm.querySelector('.af-bot-send').disabled = busy;
 }
+
+// =========================================================
+// MENÚ DESPLEGABLE DE ADJUNTOS (documento / ubicación / audio)
+// =========================================================
+function afOpenMenu(){
+  afBotMenu.classList.add('is-open');
+  afBotMenu.setAttribute('aria-hidden', 'false');
+  afBotMenuToggle.classList.add('is-active');
+  afBotMenuToggle.setAttribute('aria-expanded', 'true');
+}
+function afCloseMenu(){
+  afBotMenu.classList.remove('is-open');
+  afBotMenu.setAttribute('aria-hidden', 'true');
+  afBotMenuToggle.classList.remove('is-active');
+  afBotMenuToggle.setAttribute('aria-expanded', 'false');
+}
+function afMenuIsOpen(){ return afBotMenu.classList.contains('is-open'); }
+
+// El botón principal abre/cierra el menú… salvo cuando hay una grabación en
+// curso: entonces actúa como botón "detener y enviar".
+afBotMenuToggle.addEventListener('click', function(e){
+  e.stopPropagation();
+  if (afRecording){ afStopRecording(); return; }
+  afMenuIsOpen() ? afCloseMenu() : afOpenMenu();
+});
+
+// Cierra el menú al elegir cualquier opción
+[afBotAttach, afBotGeo, afBotMic].forEach(function(item){
+  item.addEventListener('click', afCloseMenu);
+});
+
+// Cierra el menú al hacer clic fuera de él
+document.addEventListener('click', function(e){
+  if (afMenuIsOpen() && !afBotMenu.contains(e.target) && !afBotMenuToggle.contains(e.target)){
+    afCloseMenu();
+  }
+});
 
 // =========================================================
 // LLAMADAS AL PROXY (Django -> n8n)
@@ -254,6 +379,66 @@ async function afSendAudio(blob){
   }
 }
 
+async function afSendLocation(lat, lng){
+  afSetBusy(true);
+  afShowTyping();
+  try {
+    // La ubicación se envía como texto para que n8n la procese por el flujo normal.
+    const mensaje = 'Ubicación compartida: latitud ' + lat + ', longitud ' + lng;
+    const respuesta = await afPostJson({ mensaje: mensaje });
+    afHideTyping();
+    afAddMessage(respuesta, 'bot');
+  } catch (err) {
+    afHideTyping();
+    afAddMessage('No pude enviar tu ubicación. Revisa tu conexión e inténtalo de nuevo. 🙏', 'bot');
+  } finally {
+    afSetBusy(false);
+    afBotInput.focus();
+  }
+}
+
+// =========================================================
+// COMPARTIR UBICACIÓN (Geolocation API del navegador)
+// =========================================================
+let afLocating = false;
+
+function afShareLocation(){
+  if (afLocating) return;
+  if (!('geolocation' in navigator)){
+    afAddMessage('Tu navegador no permite compartir la ubicación. Puedes escribir tu ciudad o municipio. 🙏', 'bot');
+    return;
+  }
+  afLocating = true;
+  afSetBusy(true);
+  afShowTyping();                       // feedback mientras se resuelve el GPS
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      afLocating = false;
+      afHideTyping();
+      afSetBusy(false);
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      afAddLocationMessage(lat, lng);
+      afSendLocation(lat, lng);
+    },
+    function(err){
+      afLocating = false;
+      afHideTyping();
+      afSetBusy(false);
+      const msg = (err && err.code === err.PERMISSION_DENIED)
+        ? 'No autorizaste el acceso a tu ubicación. Puedes escribir tu ciudad o municipio. 📍'
+        : 'No pude obtener tu ubicación. Inténtalo de nuevo o escribe tu ciudad o municipio. 🙏';
+      afAddMessage(msg, 'bot');
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+afBotGeo.addEventListener('click', function(){
+  if (afBotGeo.disabled) return;
+  afShareLocation();
+});
+
 // =========================================================
 // GRABACIÓN DE NOTAS DE VOZ (MediaRecorder)
 // =========================================================
@@ -276,11 +461,15 @@ function afPickAudioMime(){
   return '';
 }
 
+// Mientras se graba, el botón principal del menú se convierte en "detener".
 function afSetMicRecording(on){
   afRecording = on;
-  afBotMic.classList.toggle('is-recording', on);
-  afBotMic.setAttribute('aria-label', on ? 'Detener y enviar grabación' : 'Grabar mensaje de voz');
-  afBotMic.innerHTML = on ? '<i class="bi bi-stop-fill"></i>' : '<i class="bi bi-mic-fill"></i>';
+  if (on) afCloseMenu();
+  const label = on ? 'Detener y enviar grabación' : 'Enviar documento, ubicación o audio';
+  afBotMenuToggle.classList.toggle('is-recording', on);
+  afBotMenuToggle.setAttribute('aria-label', label);
+  afBotMenuToggle.setAttribute('data-tooltip', label);
+  afBotMenuToggle.innerHTML = on ? '<i class="bi bi-stop-fill"></i>' : '<i class="bi bi-list"></i>';
 }
 
 async function afStartRecording(){
@@ -326,8 +515,8 @@ function afStopRecording(){
 }
 
 afBotMic.addEventListener('click', function(){
-  if (afRecording) afStopRecording();
-  else             afStartRecording();
+  if (afRecording) return;   // la grabación se detiene desde el botón principal del menú
+  afStartRecording();
 });
 
 // =========================================================

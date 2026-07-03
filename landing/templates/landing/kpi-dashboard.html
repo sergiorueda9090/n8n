@@ -1,0 +1,204 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Ejecutivo — Aurora Financiera</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+:root{
+  --af-primary:#0B3D6B; --af-primary-dark:#082c4f; --af-primary-soft:#e7eef5;
+  --af-accent:#1BB8A6; --af-accent-dark:#149384; --af-bg-light:#F7FAFC;
+  --af-gray:#5C6B7A; --af-gray-light:#9AA7B4; --af-border:#DDE8F4;
+  --ok:#1BB8A6; --ok-soft:#e5f6f3;
+  --naranja:#F59E0B; --naranja-soft:#fdf1dc;
+  --rojo:#E5484D; --rojo-soft:#fce8e9;
+  --gris:#94A3B8; --gris-soft:#eef2f6;
+  --radius:18px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;}}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--af-bg-light);color:#26313D;-webkit-font-smoothing:antialiased;line-height:1.5;}
+h1,h2,h3{font-family:'Poppins',sans-serif;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--af-primary);color:#fff;padding:18px 26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.tb-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;}
+.tb-logo .ic{width:32px;height:32px;background:var(--af-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.tb-sub{font-size:.78rem;font-weight:500;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.08em;}
+.tb-spacer{flex:1;}
+.tb-back{color:rgba(255,255,255,.8);text-decoration:none;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid rgba(255,255,255,.25);border-radius:50px;transition:background .15s;}
+.tb-back:hover{background:rgba(255,255,255,.12);}
+
+/* ── WRAP ── */
+.wrap{max-width:1240px;margin:0 auto;padding:26px 22px 60px;}
+
+/* ── RESUMEN ── */
+.intro{margin-bottom:22px;}
+.intro h1{font-size:1.55rem;color:var(--af-primary);letter-spacing:-.01em;}
+.intro p{color:var(--af-gray);font-size:.95rem;margin-top:4px;max-width:760px;}
+.pills{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+.pill{background:#fff;border:1px solid var(--af-border);border-radius:50px;padding:8px 16px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(11,61,107,.05);}
+.pill b{font-size:1.05rem;color:var(--af-primary);}
+.pill .dot{width:9px;height:9px;border-radius:50%;}
+
+/* ── LEYENDA ── */
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0 26px;padding:14px 18px;background:#fff;border:1px solid var(--af-border);border-radius:14px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--af-gray);font-weight:500;}
+.legend-item .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+
+/* ── GRID DE KPIs ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
+.card{background:#fff;border:1px solid var(--af-border);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(11,61,107,.06);}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;}
+.card.ok::before{background:var(--ok);}
+.card.naranja::before{background:var(--naranja);}
+.card.rojo::before{background:var(--rojo);}
+.card.sin_datos::before{background:var(--gris);}
+
+.card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
+.k-icon{width:42px;height:42px;border-radius:11px;background:var(--af-primary-soft);color:var(--af-primary);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.k-num{font-size:.72rem;font-weight:700;color:var(--af-gray-light);letter-spacing:.05em;}
+.k-name{font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;color:#26313D;line-height:1.25;}
+
+.k-valuebar{display:flex;align-items:baseline;gap:10px;margin:6px 0 4px;flex-wrap:wrap;}
+.k-value{font-family:'Poppins',sans-serif;font-weight:800;font-size:2.5rem;line-height:1;letter-spacing:-.02em;}
+.card.ok .k-value{color:var(--ok);}
+.card.naranja .k-value{color:var(--naranja);}
+.card.rojo .k-value{color:var(--rojo);}
+.k-value.nd{color:var(--gris);font-size:1.35rem;}
+.k-unit{font-size:1.1rem;font-weight:700;color:var(--af-gray-light);}
+
+.k-status{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:50px;font-size:.78rem;font-weight:700;align-self:flex-start;margin-bottom:12px;}
+.k-status.ok{background:var(--ok-soft);color:var(--af-accent-dark);}
+.k-status.naranja{background:var(--naranja-soft);color:#B45309;}
+.k-status.rojo{background:var(--rojo-soft);color:#B4262A;}
+.k-status.sin_datos{background:var(--gris-soft);color:#556270;}
+.k-status .dot{width:8px;height:8px;border-radius:50%;}
+
+.k-detail{font-size:.82rem;color:var(--af-gray);font-weight:500;background:var(--af-bg-light);border-radius:10px;padding:9px 12px;margin-bottom:12px;}
+.k-missing{font-size:.82rem;color:#556270;background:var(--gris-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;}
+.k-missing i{color:var(--gris);flex-shrink:0;margin-top:1px;}
+
+.k-meta{margin-top:auto;border-top:1px dashed var(--af-border);padding-top:12px;display:flex;flex-direction:column;gap:8px;}
+.k-row{font-size:.78rem;color:var(--af-gray);display:flex;gap:8px;}
+.k-row .lbl{font-weight:700;color:#26313D;flex-shrink:0;min-width:62px;}
+.k-formula{font-family:'Courier New',monospace;font-size:.74rem;background:var(--af-primary);color:#cfe6f5;padding:8px 10px;border-radius:8px;word-break:break-word;line-height:1.4;}
+
+/* ── INDICADOR DE NEGOCIO ── */
+.biz{margin-top:30px;background:linear-gradient(135deg,var(--af-primary),var(--af-primary-dark));color:#fff;border-radius:var(--radius);padding:24px 26px;display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
+.biz-ic{width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+.biz-body{flex:1;min-width:220px;}
+.biz-tag{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.6);}
+.biz-name{font-family:'Poppins',sans-serif;font-weight:700;font-size:1.15rem;margin:2px 0 4px;}
+.biz-desc{font-size:.85rem;color:rgba(255,255,255,.75);max-width:520px;}
+.biz-value{text-align:right;}
+.biz-value b{font-family:'Poppins',sans-serif;font-weight:800;font-size:2.6rem;line-height:1;}
+.biz-value span{display:block;font-size:.82rem;color:rgba(255,255,255,.7);margin-top:4px;}
+
+.foot{margin-top:26px;font-size:.78rem;color:var(--af-gray-light);text-align:center;}
+
+@media(max-width:560px){
+  .grid{grid-template-columns:1fr;}
+  .biz-value{text-align:left;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo"><span class="ic"><i class="bi bi-shield-check"></i></span> Aurora Financiera</div>
+  <span class="tb-sub">Dashboard ejecutivo</span>
+  <span class="tb-spacer"></span>
+  <a class="tb-back" href="{% url 'landing:home' %}"><i class="bi bi-arrow-left"></i> Volver al sitio</a>
+</div>
+
+<div class="wrap">
+
+  <div class="intro">
+    <h1>KPIs ejecutivos de la transformación</h1>
+    <p>Cada indicador mide una de las promesas del comité directivo. Los datos se
+       leen en vivo desde la base de datos. Si un indicador aún no tiene datos,
+       se muestra qué hace falta para poder calcularlo — sin cifras inventadas.</p>
+    <div class="pills">
+      <span class="pill"><span class="dot" style="background:var(--ok)"></span><b>{{ con_datos }}</b> de {{ total_kpis }} con datos reales</span>
+      <span class="pill"><span class="dot" style="background:var(--rojo)"></span><b>{{ en_alerta }}</b> en alerta</span>
+      <span class="pill"><span class="dot" style="background:var(--gris)"></span><b>{{ sin_datos }}</b> pendientes de datos</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="dot" style="background:var(--ok)"></span> En objetivo</span>
+    <span class="legend-item"><span class="dot" style="background:var(--naranja)"></span> Alerta naranja</span>
+    <span class="legend-item"><span class="dot" style="background:var(--rojo)"></span> Alerta roja</span>
+    <span class="legend-item"><span class="dot" style="background:var(--gris)"></span> Sin datos aún</span>
+  </div>
+
+  <div class="grid">
+    {% for k in kpis %}
+    <div class="card {{ k.estado }}">
+      <div class="card-head">
+        <div class="k-icon">
+          {% if k.icono == 'robot' %}<i class="bi bi-robot"></i>
+          {% elif k.icono == 'reloj' %}<i class="bi bi-clock-history"></i>
+          {% elif k.icono == 'megafono' %}<i class="bi bi-megaphone"></i>
+          {% elif k.icono == 'estrella' %}<i class="bi bi-star-fill"></i>
+          {% elif k.icono == 'documento' %}<i class="bi bi-file-earmark-text"></i>
+          {% else %}<i class="bi bi-cash-coin"></i>{% endif %}
+        </div>
+        <div>
+          <div class="k-num">KPI {{ k.num }}</div>
+          <div class="k-name">{{ k.nombre }}</div>
+        </div>
+      </div>
+
+      <div class="k-valuebar">
+        {% if k.disponible %}
+          <span class="k-value">{{ k.valor }}</span><span class="k-unit">{{ k.unidad }}</span>
+        {% else %}
+          <span class="k-value nd">Sin datos aún</span>
+        {% endif %}
+      </div>
+
+      <span class="k-status {{ k.estado }}">
+        <span class="dot" style="background:currentColor"></span>
+        {% if k.estado == 'ok' %}En objetivo
+        {% elif k.estado == 'naranja' %}Alerta naranja
+        {% elif k.estado == 'rojo' %}Alerta roja
+        {% else %}Pendiente de datos{% endif %}
+      </span>
+
+      {% if k.detalle %}<div class="k-detail">{{ k.detalle }}</div>{% endif %}
+      {% if not k.disponible and k.faltante %}
+        <div class="k-missing"><i class="bi bi-info-circle-fill"></i><span>{{ k.faltante }}</span></div>
+      {% endif %}
+
+      <div class="k-meta">
+        <div class="k-row"><span class="lbl">Umbral</span><span>{{ k.umbral }}</span></div>
+        <div class="k-row"><span class="lbl">Por qué</span><span>{{ k.por_que }}</span></div>
+        <div class="k-formula">{{ k.formula }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="biz">
+    <div class="biz-ic"><i class="bi bi-graph-down-arrow"></i></div>
+    <div class="biz-body">
+      <div class="biz-tag">Indicador de negocio · no es KPI operativo diario</div>
+      <div class="biz-name">Tasa de mora general</div>
+      <div class="biz-desc">Métrica de resultado que tarda meses en moverse. Se sigue como
+        contexto de negocio, no como alerta diaria. Meta sectorial de referencia: 9%.</div>
+    </div>
+    <div class="biz-value">
+      <b>{{ mora.valor }}%</b>
+      <span>{{ mora.en_mora }} en mora de {{ mora.total }} asociados con saldo</span>
+    </div>
+  </div>
+
+  <p class="foot">Aurora Financiera · Datos leídos en vivo desde la base de datos (Supabase).</p>
+
+</div>
+</body>
+</html>

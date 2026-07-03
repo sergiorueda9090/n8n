@@ -28,4 +28,4 @@
 | **Texto del bot** | `#111827` | `#5C6B7A` | `--af-gray` — tono de texto cuerpo del proyecto |
 | **Burbuja del usuario** | `#14CC61` | `#1BB8A6` | Teal de Aurora — acento para mensajes del usuario |
 | **Texto del usuario** | `#FFFFFF` | `#FFFFFF` | Blanco sobre teal — no cambiar |
-| **Fondo del input** | `#F9FAFB` | `#F7FAFC` | `--af-bg-light` — fondo suave del proyecto |
+| **Fondo del input** | `#F9FAFB` | `   ` | `--af-bg-light` — fondo suave del proyecto |

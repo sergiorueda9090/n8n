@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
 from . import n8n_client
+from . import kpis as kpis_service
 
 
 def home(request):
@@ -14,6 +15,21 @@ def home(request):
 
 def agent_dashboard(request):
     return render(request, 'landing/agent-dashboard.html')
+
+
+def kpi_dashboard(request):
+    """Dashboard ejecutivo con los 6 KPIs calculados desde Supabase."""
+    kpis, mora = kpis_service.compute_kpis()
+    con_datos = sum(1 for k in kpis if k['disponible'])
+    en_alerta = sum(1 for k in kpis if k['estado'] in ('rojo', 'naranja'))
+    return render(request, 'landing/kpi-dashboard.html', {
+        'kpis': kpis,
+        'mora': mora,
+        'con_datos': con_datos,
+        'total_kpis': len(kpis),
+        'en_alerta': en_alerta,
+        'sin_datos': len(kpis) - con_datos,
+    })
 
 
 # Límites de tamaño (sobre el contenido ya decodificado)
@@ -50,7 +66,7 @@ def _b64_size(b64: str) -> int:
 def chat_api(request):
     """
     Proxy del chat hacia n8n. Una sola modalidad por request:
-      - Texto : {mensaje}
+      - Texto : {mensaje}          (la ubicación llega como texto por aquí)
       - Audio : {audio}            (base64 sin prefijo data:)
       - Imagen: {imagen, formato}  (base64 sin prefijo; formato = MIME)
 
@@ -77,6 +93,17 @@ def chat_api(request):
         )
 
     return JsonResponse({'respuesta': n8n_client.extract_reply(data)})
+
+
+@require_POST
+def chat_reset(request):
+    """
+    Inicia una conversación nueva: descarta el chat_id de la sesión para que el
+    próximo mensaje genere uno fresco (n8n lo usa como clave de memoria, así que
+    un chat_id nuevo = conversación desde cero).
+    """
+    request.session.pop('chat_id', None)
+    return JsonResponse({'ok': True})
 
 
 def _build_payload(chat_id, body):

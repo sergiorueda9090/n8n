@@ -461,7 +461,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visib
 
 .af-bot-window{
   position:fixed; bottom:100px; right:24px; z-index:1079;
-  width:360px; max-width:92vw; height:500px; max-height:75vh;
+  width:360px; max-width:92vw; height:600px; max-height:82vh;
   background:var(--af-white);
   border-radius:var(--af-radius-md);
   box-shadow:var(--af-shadow-lg);
@@ -513,7 +513,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visib
   display:flex; flex-direction:column; gap:10px;
 }
 .af-bot-msg{
-  max-width:80%;
+  max-width:100%;
   padding:.65rem .9rem;
   border-radius:14px;
   font-size:.88rem; line-height:1.45;
@@ -531,6 +531,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visib
   align-self:flex-end;
   border-bottom-right-radius:4px;
 }
+
+/* Formato enriquecido dentro de las respuestas del bot (Markdown -> HTML) */
+.af-bot-msg-bot strong{ font-weight:700; color:var(--af-primary); }
+.af-bot-msg-bot > * + *{ margin-top:.35rem; }        /* separa bloques/líneas */
+.af-bot-msg-bot .af-bot-list{
+  margin:.15rem 0; padding-left:1.15rem;
+  list-style:disc;
+}
+.af-bot-msg-bot .af-bot-list li{ margin:.12rem 0; }
 
 .af-bot-inputbar{
   display:flex; align-items:center; gap:.5rem;
@@ -552,35 +561,107 @@ a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visib
   flex-shrink:0; cursor:pointer; transition:var(--af-transition);
 }
 .af-bot-send:hover{ background:var(--af-accent-dark); }
-.af-bot-send:disabled,
-.af-bot-mic:disabled,
-.af-bot-attach:disabled{ opacity:.5; cursor:not-allowed; }
+.af-bot-send:disabled{ opacity:.5; cursor:not-allowed; }
 
-/* Botón de grabar nota de voz (micrófono) — vive en el header, junto al nombre */
-.af-bot-mic{
-  width:34px; height:34px; border-radius:50%;
-  background:rgba(255,255,255,.15); color:var(--af-white);
-  border:none; display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; cursor:pointer; font-size:1rem; transition:var(--af-transition);
-}
-.af-bot-mic:hover{ background:var(--af-accent); color:var(--af-white); }
-.af-bot-mic.is-recording{
-  background:#e5484d; color:var(--af-white);
-  animation:afMicPulse 1.3s infinite;
-}
 @keyframes afMicPulse{
   0%, 100%{ box-shadow:0 0 0 0 rgba(229,72,77,.55); }
   50%     { box-shadow:0 0 0 7px rgba(229,72,77,0); }
 }
 
-/* Botón de adjuntar documento (clip) */
-.af-bot-attach{
+/* =========================================================
+   MENÚ DESPLEGABLE DE ADJUNTOS (documento / ubicación / audio)
+   ========================================================= */
+.af-bot-menu-wrap{ position:relative; flex-shrink:0; }
+
+/* Botón principal que abre el menú (hamburguesa). Se transforma en
+   botón "detener" mientras se graba una nota de voz. */
+.af-bot-menu-toggle{
   width:38px; height:38px; border-radius:50%;
   background:var(--af-primary-soft); color:var(--af-primary);
   border:none; display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; cursor:pointer; font-size:1.1rem; transition:var(--af-transition);
+  cursor:pointer; font-size:1.25rem; transition:var(--af-transition);
 }
-.af-bot-attach:hover{ background:var(--af-accent); color:var(--af-white); }
+.af-bot-menu-toggle:hover{ background:var(--af-accent); color:var(--af-white); }
+.af-bot-menu-toggle.is-active{ background:var(--af-primary); color:var(--af-white); }
+.af-bot-menu-toggle:disabled{ opacity:.5; cursor:not-allowed; }
+.af-bot-menu-toggle.is-recording{
+  background:#e5484d; color:var(--af-white);
+  animation:afMicPulse 1.3s infinite;
+}
+
+/* Tooltip instantáneo que explica la acción del botón (aparece encima) */
+.af-tip{ position:relative; }
+.af-tip::after{
+  content:attr(data-tooltip);
+  position:absolute; bottom:calc(100% + 11px); left:0;
+  transform:translateY(4px);
+  background:var(--af-primary); color:var(--af-white);
+  font-size:.72rem; font-weight:600; line-height:1.1; white-space:nowrap;
+  padding:7px 11px; border-radius:8px;
+  box-shadow:0 6px 16px rgba(11,61,107,.22);
+  opacity:0; pointer-events:none; z-index:6;
+  transition:opacity .16s ease, transform .16s ease;
+}
+.af-tip::before{
+  content:''; position:absolute; bottom:calc(100% + 5px); left:19px;
+  transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:var(--af-primary);
+  opacity:0; pointer-events:none; z-index:6;
+  transition:opacity .16s ease;
+}
+.af-tip:hover::after, .af-tip:focus-visible::after{ opacity:1; transform:translateY(0); }
+.af-tip:hover::before, .af-tip:focus-visible::before{ opacity:1; }
+/* Ocultar el tooltip mientras el menú está abierto (evita solaparse con el popover) */
+.af-tip.is-active::after, .af-tip.is-active::before{ opacity:0; }
+
+/* Popover con las opciones */
+.af-bot-menu{
+  position:absolute; bottom:calc(100% + 12px); left:0;
+  min-width:216px; padding:8px;
+  background:var(--af-white);
+  border:1px solid rgba(11,61,107,.10);
+  border-radius:var(--af-radius-md);
+  box-shadow:0 12px 34px rgba(11,61,107,.18);
+  display:flex; flex-direction:column; gap:2px;
+  opacity:0; transform:translateY(10px) scale(.96); transform-origin:bottom left;
+  pointer-events:none; z-index:5;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.af-bot-menu.is-open{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+
+/* Flecha del popover apuntando al botón */
+.af-bot-menu::after{
+  content:''; position:absolute; top:100%; left:20px;
+  border:7px solid transparent; border-top-color:var(--af-white);
+}
+
+.af-bot-menu-item{
+  display:flex; align-items:center; gap:.7rem;
+  width:100%; padding:9px 10px;
+  background:transparent; border:none; border-radius:10px;
+  cursor:pointer; text-align:left;
+  font-family:inherit; font-size:.9rem; font-weight:600;
+  color:var(--af-primary); transition:background .15s ease;
+}
+.af-bot-menu-item:hover{ background:var(--af-primary-soft); }
+.af-bot-menu-item:disabled{ opacity:.5; cursor:not-allowed; }
+
+.af-bot-menu-ico{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.05rem; color:var(--af-white);
+}
+.af-bot-menu-ico-doc{   background:var(--af-primary); }
+.af-bot-menu-ico-geo{   background:var(--af-accent); }
+.af-bot-menu-ico-audio{ background:#e5484d; }
+
+/* Burbuja de ubicación compartida (enlace a mapa) */
+.af-bot-msg-geo a{
+  display:flex; align-items:center; gap:.5rem;
+  color:inherit; text-decoration:none; font-weight:600;
+}
+.af-bot-msg-geo .bi{ font-size:1.2rem; }
+.af-bot-msg-geo small{ display:block; font-weight:400; opacity:.85; }
 
 /* Miniatura de la imagen del documento dentro de una burbuja */
 .af-bot-msg-img{ padding:5px; }
@@ -610,7 +691,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visib
 }
 
 @media (max-width:480px){
-  .af-bot-window{ right:4vw; bottom:90px; width:92vw; height:70vh; }
+  .af-bot-window{ right:4vw; bottom:90px; width:92vw; height:80vh; }
   .af-bot-window.is-open{ bottom:12px; }
   .af-bot-toggle{ right:18px; bottom:18px; }
 }

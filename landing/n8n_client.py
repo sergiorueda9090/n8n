@@ -5,7 +5,7 @@ Usa solo la librería estándar (urllib) para no añadir dependencias.
 Todo se envía como application/json. La web manda una sola modalidad por
 petición y el proxy le añade el chat_id de la sesión antes de reenviar:
 
-  - Texto  -> {chat_id, mensaje}
+  - Texto  -> {chat_id, mensaje}                (la ubicación llega como texto)
   - Audio  -> {chat_id, audio, formato}      (audio en base64, sin prefijo data:)
   - Imagen -> {chat_id, imagen, formato}     (imagen en base64, sin prefijo data:)
 

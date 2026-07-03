@@ -131,10 +131,6 @@
       <strong>Aurorita — Tu asistente Aurora</strong>
       <span><span class="af-bot-status-dot"></span> En línea</span>
     </div>
-    <button type="button" class="af-bot-mic" id="afBotMic"
-            aria-label="Grabar mensaje de voz" title="Grabar nota de voz">
-      <i class="bi bi-mic-fill"></i>
-    </button>
     <button class="af-bot-header-close" id="afBotClose" aria-label="Cerrar chat">
       <i class="bi bi-x-lg"></i>
     </button>
@@ -148,11 +144,32 @@
 
   <form class="af-bot-inputbar" id="afBotForm"
         data-chat-url="{% url 'landing:chat_api' %}"
+        data-reset-url="{% url 'landing:chat_reset' %}"
         data-csrf="{{ csrf_token }}">
-    <button type="button" class="af-bot-attach" id="afBotAttach"
-            aria-label="Adjuntar documento de identidad" title="Subir documento de identidad">
-      <i class="bi bi-paperclip"></i>
-    </button>
+    <div class="af-bot-menu-wrap">
+      <button type="button" class="af-bot-menu-toggle af-tip" id="afBotMenuToggle"
+              aria-label="Enviar documento, ubicación o audio" aria-haspopup="true" aria-expanded="false"
+              data-tooltip="Enviar documento, ubicación o audio">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="af-bot-menu" id="afBotMenu" role="menu" aria-hidden="true" aria-label="Opciones para enviar">
+        <button type="button" class="af-bot-menu-item" id="afBotAttach" role="menuitem"
+                aria-label="Adjuntar documento de identidad">
+          <span class="af-bot-menu-ico af-bot-menu-ico-doc"><i class="bi bi-paperclip"></i></span>
+          <span>Adjuntar documento</span>
+        </button>
+        <button type="button" class="af-bot-menu-item" id="afBotGeo" role="menuitem"
+                aria-label="Compartir mi ubicación">
+          <span class="af-bot-menu-ico af-bot-menu-ico-geo"><i class="bi bi-geo-alt-fill"></i></span>
+          <span>Compartir ubicación</span>
+        </button>
+        <button type="button" class="af-bot-menu-item" id="afBotMic" role="menuitem"
+                aria-label="Grabar mensaje de voz">
+          <span class="af-bot-menu-ico af-bot-menu-ico-audio"><i class="bi bi-mic-fill"></i></span>
+          <span>Grabar audio</span>
+        </button>
+      </div>
+    </div>
     <input type="text" id="afBotInput" placeholder="Escribe tu mensaje..." aria-label="Escribe tu mensaje para Aurorita" autocomplete="off">
     <button type="submit" class="af-bot-send" aria-label="Enviar mensaje">
       <i class="bi bi-send-fill"></i>
@@ -166,13 +183,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'aurora/js/aurora.js' %}"></script>
 
-<!-- BOTAI Widget -->
-<!-- <script
-  src="https://d13fnqnnzkg3mp.cloudfront.net/widget/v1/botai-widget.js"
-  data-agent-id="8309aa50-f041-46fa-8b1f-6430b6af81ca"
-  data-tenant-id="00000000-0000-0000-0000-000000000000"
+
+<!-- BOTAI Widget — pegar antes de </body> 
+<script
+  src="https://v2.botai.smartdataautomation.com/widget/v1/botai-widget.js"
+  data-agent-id="78443198-aaaf-4955-9c01-13dca70d8453"
+  data-tenant-id="118fea4c-d69a-4037-98ea-aa51dccbe075"
   defer
-></script>-->
+></script>
+-->
 
 {% block extra_js %}{% endblock %}
 </body>

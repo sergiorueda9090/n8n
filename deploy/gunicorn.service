@@ -6,8 +6,9 @@ Description=Gunicorn - Aurora Financiera (Django)
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
+# Usuario dueño del código y de la Deploy Key (Ubuntu: 'ubuntu'; Amazon Linux: 'ec2-user').
+User=ubuntu
+Group=ubuntu
 WorkingDirectory=/var/www/aurora
 # python-decouple lee automáticamente el archivo .env de WorkingDirectory.
 ExecStart=/var/www/aurora/env/bin/gunicorn \
