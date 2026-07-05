@@ -541,6 +541,29 @@ a:focus-visible, button:focus-visible, input:focus-visible, .af-card:focus-visib
 }
 .af-bot-msg-bot .af-bot-list li{ margin:.12rem 0; }
 
+/* Enlaces dentro de mensajes del bot */
+.af-bot-link{
+  color:var(--af-accent-dark);
+  text-decoration:underline;
+  word-break:break-word;
+}
+.af-bot-link:hover{ color:var(--af-primary); }
+
+/* Enlace de pasarela de pago: se muestra como botón CTA */
+.af-bot-link-btn{
+  display:inline-flex; align-items:center; gap:.4rem;
+  margin-top:.4rem;
+  padding:.6rem 1rem;
+  background:var(--af-accent);
+  color:#fff;
+  font-weight:600;
+  text-decoration:none;
+  border-radius:var(--af-radius-md, 12px);
+  transition:background .15s ease, transform .08s ease;
+}
+.af-bot-link-btn:hover{ background:var(--af-accent-dark); color:#fff; }
+.af-bot-link-btn:active{ transform:scale(.98); }
+
 .af-bot-inputbar{
   display:flex; align-items:center; gap:.5rem;
   padding:12px 14px;

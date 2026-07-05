@@ -172,9 +172,43 @@ function afEscapeHtml(s){
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Formato en línea: **negrita** -> <strong> (sobre texto ya escapado).
+// Formato en línea sobre texto YA escapado. Soporta:
+//   [texto](url)  -> botón/enlace clickeable (abre en pestaña nueva)
+//   url suelta     -> se auto-enlaza
+//   **negrita**    -> <strong>
+// Los enlaces se extraen a marcadores antes de aplicar negrita para no romper
+// las etiquetas <a>. Solo se aceptan URLs http(s).
 function afInlineMarkdown(s){
-  return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const links = [];
+  const stash = function(url, label){
+    // La URL viene escapada (& -> &amp;), que es valido dentro de href.
+    const i = links.length;
+    links.push({ url: url, label: label || url });
+    // Marcador seguro (el texto ya viene escapado, '@' no lo produce el escape).
+    return '@@AFLINK' + i + '@@';
+  };
+
+  // 1) Enlaces Markdown [texto](url)
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function(_, label, url){
+    return stash(url, label);
+  });
+  // 2) URLs sueltas fuera de un enlace Markdown
+  s = s.replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, function(m, pre, url){
+    return pre + stash(url, null);
+  });
+  // 3) Negrita
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // 4) Restaurar enlaces como <a>. Los que van a la pasarela (/pago/) como boton.
+  return s.replace(/@@AFLINK(\d+)@@/g, function(_, idx){
+    const l = links[+idx];
+    const esPago = /\/pago\/?\?/.test(l.url);
+    const cls = esPago ? 'af-bot-link af-bot-link-btn' : 'af-bot-link';
+    const label = esPago
+      ? '<i class="bi bi-shield-lock-fill"></i> ' + l.label
+      : l.label;
+    return '<a class="' + cls + '" href="' + l.url +
+           '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+  });
 }
 
 // Convierte un subconjunto seguro de Markdown a HTML: negrita, listas (- / *)
@@ -198,6 +232,35 @@ function afRenderRich(text){
   return html;
 }
 
+// Sonido de notificación (dos notas cortas) cuando el bot responde.
+// Se sintetiza con Web Audio: no requiere archivo externo. El AudioContext se
+// crea perezosamente tras el primer gesto del usuario (enviar un mensaje), así
+// que las políticas de autoplay del navegador no lo bloquean.
+let afAudioCtx = null;
+function afPlayNotify(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!afAudioCtx) afAudioCtx = new AC();
+    if (afAudioCtx.state === 'suspended') afAudioCtx.resume();
+    const ctx = afAudioCtx;
+    const now = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    [[880, now], [1174.66, now + 0.12]].forEach(function(pair){
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(pair[0], pair[1]);
+      osc.connect(gain);
+      osc.start(pair[1]);
+      osc.stop(pair[1] + 0.18);
+    });
+  }catch(e){ /* silencioso: el sonido es un extra, nunca debe romper el chat */ }
+}
+
 function afAddMessage(text, sender){
   const bubble = document.createElement('div');
   const isUser = sender === 'user';
@@ -207,6 +270,7 @@ function afAddMessage(text, sender){
   else       { bubble.innerHTML = afRenderRich(text); }
   afBotMessages.appendChild(bubble);
   afScrollBottom();
+  if (!isUser) afPlayNotify();   // avisa al usuario que llegó respuesta del bot
   return bubble;
 }
 
