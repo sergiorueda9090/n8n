@@ -100,7 +100,7 @@ DATABASES = {
 # Prod:  .../webhook/aura-web
 N8N_WEBHOOK_URL = config(
     'N8N_WEBHOOK_URL',
-    default='https://srueda.app.n8n.cloud/webhook-test/aura-web',
+    default='https://sruedagoat.app.n8n.cloud/webhook-test/aura-web',
 )
 # Timeout (segundos) para la llamada saliente a n8n
 N8N_TIMEOUT = config('N8N_TIMEOUT', default=30, cast=int)
