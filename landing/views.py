@@ -1,9 +1,11 @@
 import json
 import uuid
 
+from django.db import connection, DatabaseError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 from . import n8n_client
 from . import kpis as kpis_service
@@ -15,6 +17,126 @@ def home(request):
 
 def agent_dashboard(request):
     return render(request, 'landing/agent-dashboard.html')
+
+
+def pago(request):
+    """
+    Pasarela de pago simulada. Página de pruebas que recibe los datos del pago
+    por parámetros GET y los muestra para confirmación. Al confirmar/cancelar,
+    el navegador hace POST a `pago_registrar` (mismo origen). Toda la lógica de
+    presentación vive en el template.
+    """
+    return render(request, 'landing/pago.html')
+
+
+# Estado que se guarda en la tabla `pagos` según el resultado de la pasarela.
+# 'exitoso' se alinea con los KPIs (que filtran estado ILIKE '%exito%').
+_ESTADO_PAGO = {'aprobado': 'exitoso', 'rechazado': 'rechazado'}
+
+
+def _registrar_pago(datos):
+    """
+    Inserta el pago en la tabla `pagos` de Supabase. Es idempotente por
+    `numero_transaccion` (la referencia): si ya existe, no duplica. Devuelve
+    True si la fila queda registrada (recién insertada o ya existente).
+    """
+    referencia = datos['referencia']
+    cedula = (datos.get('cedula') or '').strip()
+    id_cliente = int(cedula) if cedula.isdigit() else None
+
+    with connection.cursor() as cur:
+        cur.execute(
+            "SELECT 1 FROM pagos WHERE numero_transaccion = %s LIMIT 1",
+            [referencia],
+        )
+        if cur.fetchone():
+            return True  # ya registrado (reintento): no duplicar
+
+        cur.execute(
+            "INSERT INTO pagos "
+            "(chat_id, id_cliente, monto, tipo_pago, numero_transaccion, "
+            " estado, medio_comprobante, created_at) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, now())",
+            [
+                datos['chat_id'],
+                id_cliente,
+                datos['monto'],
+                datos.get('concepto') or 'Pago',
+                referencia,
+                datos['estado'],
+                datos.get('canal') or 'web',
+            ],
+        )
+    return True
+
+
+@csrf_exempt
+@require_POST
+def pago_registrar(request):
+    """
+    Registra el resultado de un pago simulado: lo guarda en la tabla `pagos`
+    de Supabase y lo reenvía al callback_url de n8n. El navegador de la
+    pasarela le pega aquí (mismo origen, sin CORS). Responde {ok} siempre en
+    JSON; ante fallo devuelve un mensaje para que la pasarela reintente.
+    """
+    try:
+        body = json.loads(request.body or b'{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'error': 'Solicitud inválida.'}, status=400)
+
+    chat_id      = (body.get('chat_id') or '').strip()
+    referencia   = (body.get('referencia') or '').strip()
+    callback_url = (body.get('callback_url') or '').strip()
+    estado_in    = (body.get('estado') or '').strip().lower()
+
+    if not (chat_id and referencia and estado_in in _ESTADO_PAGO):
+        return JsonResponse(
+            {'ok': False, 'error': 'Faltan datos obligatorios del pago.'},
+            status=400,
+        )
+
+    try:
+        monto = float(body.get('monto'))
+    except (TypeError, ValueError):
+        return JsonResponse({'ok': False, 'error': 'Monto inválido.'}, status=400)
+
+    datos = {
+        'chat_id':    chat_id,
+        'cedula':     body.get('cedula'),
+        'monto':      monto,
+        'concepto':   body.get('concepto'),
+        'referencia': referencia,
+        'canal':      body.get('canal'),
+        'estado':     _ESTADO_PAGO[estado_in],
+    }
+
+    # 1) Registrar en Supabase (requisito: todo pago queda en la tabla `pagos`).
+    try:
+        _registrar_pago(datos)
+    except (DatabaseError, ValueError):
+        return JsonResponse(
+            {'ok': False, 'error': 'No se pudo registrar el pago. Reintenta.'},
+            status=502,
+        )
+
+    # 2) Notificar el resultado al flujo de n8n (para que continúe la conversación).
+    #    Si el callback falla, el pago YA quedó registrado; se avisa como no crítico.
+    callback_ok = True
+    if callback_url:
+        payload = {
+            'chat_id':    chat_id,
+            'referencia': referencia,
+            'estado':     estado_in,          # 'aprobado' / 'rechazado' (contrato de n8n)
+            'monto':      monto,
+            'cedula':     datos['cedula'],
+            'canal':      datos['canal'],
+        }
+        try:
+            n8n_client.forward_to(callback_url, payload)
+        except n8n_client.N8nError:
+            callback_ok = False
+
+    return JsonResponse({'ok': True, 'estado': estado_in, 'callback_ok': callback_ok})
 
 
 def kpi_dashboard(request):

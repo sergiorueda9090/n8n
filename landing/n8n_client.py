@@ -59,6 +59,39 @@ def forward(payload: dict) -> dict:
     return _post(data, 'application/json')
 
 
+def forward_to(url: str, payload: dict) -> dict:
+    """
+    Reenvía un payload como application/json a una URL arbitraria (p. ej. el
+    callback_url que trae el enlace de pago). Misma tolerancia de respuesta que
+    _post, pero contra la URL indicada en vez del webhook de settings.
+    """
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+        method='POST',
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=settings.N8N_TIMEOUT) as resp:
+            raw = resp.read().decode('utf-8').strip()
+    except urllib.error.HTTPError as exc:
+        raise N8nError(f'El callback respondió {exc.code}: {exc.reason}') from exc
+    except urllib.error.URLError as exc:
+        raise N8nError(f'No se pudo conectar con el callback: {exc.reason}') from exc
+    except TimeoutError as exc:
+        raise N8nError('El callback no respondió a tiempo (timeout).') from exc
+
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return {'respuesta': raw}
+    if isinstance(parsed, list):
+        parsed = parsed[0] if parsed else {}
+    return parsed if isinstance(parsed, dict) else {'respuesta': str(parsed)}
+
+
 def extract_reply(data: dict) -> str:
     """
     Extrae el texto de respuesta del bot de forma tolerante.

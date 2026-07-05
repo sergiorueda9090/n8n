@@ -1,0 +1,10 @@
+id,cedula,nombre_completo,email,telefono,direccion,ciudad,fecha_vinculacion,estado_cliente,saldo_total,cuota_mensual,fecha_vencimiento,estado_saldo,fecha_consulta,dias_demora
+1001,1023456789,Laura Martínez Rojas,laura.martinez@email.com,3001234567,Calle 45 #12-30,Bogotá,2021-03-15,Activo,1250000.00,185000.00,2026-06-28,Al día,2026-06-18,6
+1002,1045678912,Carlos Andrés Ramírez,carlos.ramirez@email.com,3012345678,Av 19 #100-22,Bogotá,2019-07-02,Activo,3400000.00,210000.00,2026-06-15,En mora,2026-06-18,19
+1003,1078912345,Jorge Eliécer Pinzón,jorge.pinzon@email.com,3023456789,Cra 50 #30-15,Medellín,2020-11-20,Activo,2150000.00,175000.00,2026-06-10,En mora,2026-06-18,24
+1004,1056789123,Sandra Milena Gómez,sandra.gomez@email.com,3034567891,Cl 72 #10-05,Cali,2018-05-10,Activo,4800000.00,620000.00,2026-05-20,En mora,2026-06-18,45
+1005,1034567890,Andrés Felipe Torres,andres.torres@email.com,3045678912,Cra 15 #85-20,Bucaramanga,2022-01-08,Activo,980000.00,95000.00,2026-07-02,Al día,2026-06-18,2
+1006,1067891234,Diana Carolina López,diana.lopez@email.com,3056789123,Cl 100 #45-67,Bogotá,2017-09-25,Activo,1750000.00,140000.00,2026-06-30,Al día,2026-06-18,4
+1007,1089123456,Mauricio Esteban Cárdenas,mauricio.cardenas@email.com,3067891234,Cra 70 #25-40,Cali,2023-02-14,Activo,2300000.00,160000.00,2026-07-05,Al día,2026-06-18,0
+1008,1090123456,Paula Andrea Quintero,paula.quintero@email.com,3078912345,Cl 30 #8-12,Pereira,2021-12-01,Activo,1100000.00,88000.00,2026-06-25,Al día,2026-06-18,9
+1010,1067123489,Natalia Andrea Beltrán,natalia.beltran@email.com,3090123456,Cl 19 #50-30,Bucaramanga,2024-06-01,Activo,500000.00,50000.00,2026-07-10,Al día,2026-06-18,0

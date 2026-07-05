@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pasarela de pago · Aurora Financiera</title>
+  <style>
+    :root {
+      --af-primary: #0B3D6B;
+      --af-primary-dark: #082c4f;
+      --af-primary-soft: #e7eef5;
+      --af-accent: #1BB8A6;
+      --af-accent-dark: #149384;
+      --af-danger: #d64545;
+      --af-bg: #F7FAFC;
+      --af-text: #1c2b3a;
+      --af-muted: #667890;
+      --af-line: #e2e8f0;
+      --af-radius-lg: 24px;
+      --af-radius-md: 16px;
+      --af-radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(160deg, var(--af-primary) 0%, var(--af-primary-dark) 55%, #061f38 100%);
+      color: var(--af-text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .af-card {
+      width: 100%;
+      max-width: 440px;
+      background: #fff;
+      border-radius: var(--af-radius-lg);
+      box-shadow: 0 24px 60px rgba(6, 31, 56, .35);
+      overflow: hidden;
+      animation: rise .4s ease;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cabecera */
+    .af-head {
+      background: var(--af-primary);
+      color: #fff;
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .af-logo {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--af-accent), var(--af-accent-dark));
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 20px; color: #fff;
+      flex: 0 0 auto;
+    }
+    .af-brand strong { display: block; font-size: 17px; font-weight: 700; letter-spacing: .2px; }
+    .af-brand span   { display: block; font-size: 12px; opacity: .8; margin-top: 1px; }
+
+    .af-body { padding: 28px; }
+
+    /* Estados de pantalla */
+    .af-screen { display: none; }
+    .af-screen.is-active { display: block; animation: fade .3s ease; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Resumen de pago */
+    .af-amount {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+    .af-amount .label { font-size: 13px; color: var(--af-muted); text-transform: uppercase; letter-spacing: .8px; }
+    .af-amount .value { font-size: 40px; font-weight: 800; color: var(--af-primary); margin-top: 4px; line-height: 1.1; }
+    .af-amount .value small { font-size: 18px; font-weight: 600; color: var(--af-muted); }
+
+    .af-rows {
+      border: 1px solid var(--af-line);
+      border-radius: var(--af-radius-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .af-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px 16px;
+      font-size: 14px;
+    }
+    .af-row + .af-row { border-top: 1px solid var(--af-line); }
+    .af-row .k { color: var(--af-muted); flex: 0 0 auto; }
+    .af-row .v { color: var(--af-text); font-weight: 600; text-align: right; word-break: break-word; }
+    .af-chip {
+      display: inline-block;
+      background: var(--af-primary-soft);
+      color: var(--af-primary);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+
+    /* Botones */
+    .af-actions { display: flex; flex-direction: column; gap: 10px; }
+    .af-btn {
+      border: none;
+      border-radius: var(--af-radius-sm);
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform .08s ease, background .15s ease, opacity .15s ease;
+    }
+    .af-btn:active { transform: scale(.98); }
+    .af-btn:focus-visible { outline: 3px solid var(--af-accent); outline-offset: 2px; }
+    .af-btn--primary { background: var(--af-accent); color: #fff; }
+    .af-btn--primary:hover { background: var(--af-accent-dark); }
+    .af-btn--ghost { background: #fff; color: var(--af-muted); border: 1px solid var(--af-line); }
+    .af-btn--ghost:hover { background: var(--af-bg); }
+    .af-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    .af-secure {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px;
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--af-muted);
+    }
+
+    /* Spinner */
+    .af-loading { text-align: center; padding: 30px 10px; }
+    .af-spinner {
+      width: 46px; height: 46px;
+      border: 4px solid var(--af-primary-soft);
+      border-top-color: var(--af-accent);
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .af-loading p { color: var(--af-muted); font-size: 14px; }
+
+    /* Resultado */
+    .af-result { text-align: center; padding: 14px 6px; }
+    .af-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      display: grid; place-items: center;
+      font-size: 38px; color: #fff;
+    }
+    .af-icon--ok     { background: var(--af-accent); }
+    .af-icon--cancel { background: var(--af-muted); }
+    .af-icon--error  { background: var(--af-danger); }
+    .af-result h2 { font-size: 22px; color: var(--af-primary); margin-bottom: 8px; }
+    .af-result p  { color: var(--af-muted); font-size: 14px; line-height: 1.55; }
+    .af-result .ref { margin-top: 14px; font-size: 12px; color: var(--af-muted); }
+    .af-result .ref code {
+      background: var(--af-bg); padding: 3px 8px; border-radius: 6px;
+      font-size: 12px; color: var(--af-text);
+    }
+
+    footer.af-foot {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: var(--af-muted);
+      border-top: 1px solid var(--af-line);
+    }
+
+    @media (max-width: 480px) {
+      .af-body { padding: 22px; }
+      .af-amount .value { font-size: 34px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="af-card">
+    <div class="af-head">
+      <div class="af-logo">A</div>
+      <div class="af-brand">
+        <strong>Aurora Financiera</strong>
+        <span>Pasarela de pago segura</span>
+      </div>
+    </div>
+
+    <div class="af-body">
+      <!-- Pantalla: confirmación -->
+      <section id="scr-confirm" class="af-screen">
+        <div class="af-amount">
+          <div class="label">Total a pagar</div>
+          <div class="value" id="v-monto">$ 0 <small>COP</small></div>
+        </div>
+
+        <div class="af-rows">
+          <div class="af-row"><span class="k">Concepto</span><span class="v" id="v-concepto">—</span></div>
+          <div class="af-row"><span class="k">Referencia</span><span class="v" id="v-referencia">—</span></div>
+          <div class="af-row"><span class="k">Cédula asociado</span><span class="v" id="v-cedula">—</span></div>
+          <div class="af-row"><span class="k">Canal</span><span class="v"><span class="af-chip" id="v-canal">—</span></span></div>
+        </div>
+
+        <div class="af-actions">
+          <button class="af-btn af-btn--primary" id="btn-confirm">Confirmar pago</button>
+          <button class="af-btn af-btn--ghost" id="btn-cancel">Cancelar</button>
+        </div>
+
+        <div class="af-secure">🔒 Transacción cifrada · Entorno de pruebas</div>
+      </section>
+
+      <!-- Pantalla: cargando -->
+      <section id="scr-loading" class="af-screen">
+        <div class="af-loading">
+          <div class="af-spinner"></div>
+          <p id="loading-text">Procesando tu pago…</p>
+        </div>
+      </section>
+
+      <!-- Pantalla: resultado -->
+      <section id="scr-result" class="af-screen">
+        <div class="af-result">
+          <div class="af-icon" id="r-icon">✓</div>
+          <h2 id="r-title">—</h2>
+          <p id="r-message">—</p>
+          <div class="ref" id="r-ref"></div>
+          <div class="af-actions" id="r-actions" style="margin-top:22px; display:none;"></div>
+        </div>
+      </section>
+
+      <!-- Pantalla: error de parámetros -->
+      <section id="scr-invalid" class="af-screen">
+        <div class="af-result">
+          <div class="af-icon af-icon--error">!</div>
+          <h2>Enlace de pago inválido</h2>
+          <p id="invalid-msg">Faltan datos obligatorios en el enlace. Solicita al agente Aurita un nuevo enlace de pago.</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="af-foot">
+      Aurora Financiera · Cooperativa de ahorro y crédito · Simulación de pasarela
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // Endpoint propio (mismo origen): registra en Supabase y reenvía a n8n.
+    var REGISTRAR_URL = "{% url 'landing:pago_registrar' %}";
+    var REQUIRED = ["chat_id", "monto", "referencia", "callback_url"];
+
+    var params = new URLSearchParams(window.location.search);
+    var data = {
+      chat_id:      params.get("chat_id") || "",
+      cedula:       params.get("cedula") || "",
+      monto:        params.get("monto") || "",
+      concepto:     params.get("concepto") || "",
+      referencia:   params.get("referencia") || "",
+      canal:        params.get("canal") || "web",
+      callback_url: params.get("callback_url") || ""
+    };
+
+    function show(id) {
+      var screens = document.querySelectorAll(".af-screen");
+      for (var i = 0; i < screens.length; i++) screens[i].classList.remove("is-active");
+      document.getElementById(id).classList.add("is-active");
+    }
+
+    function formatCOP(value) {
+      var n = Number(value);
+      if (!isFinite(n)) return "$ 0 COP";
+      return "$ " + n.toLocaleString("es-CO") + " <small>COP</small>";
+    }
+
+    function setText(id, text) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = text || "—";
+    }
+
+    // --- Validación de parámetros obligatorios ---
+    var missing = REQUIRED.filter(function (k) { return !data[k]; });
+    var montoNum = Number(data.monto);
+    if (missing.length || !isFinite(montoNum) || montoNum <= 0) {
+      var msg = "Faltan datos obligatorios en el enlace";
+      if (missing.length) msg += " (" + missing.join(", ") + ")";
+      msg += ". Solicita al agente Aurita un nuevo enlace de pago.";
+      document.getElementById("invalid-msg").textContent = msg;
+      show("scr-invalid");
+      return;
+    }
+
+    // --- Pintar resumen ---
+    document.getElementById("v-monto").innerHTML = formatCOP(montoNum);
+    setText("v-concepto", data.concepto || "Pago Aurora Financiera");
+    setText("v-referencia", data.referencia);
+    setText("v-cedula", data.cedula || "No especificada");
+    setText("v-canal", data.canal);
+    show("scr-confirm");
+
+    // --- Envío del resultado: registra en Supabase y reenvía a n8n ---
+    function enviarResultado(estado) {
+      show("scr-loading");
+      document.getElementById("loading-text").textContent =
+        estado === "aprobado" ? "Procesando tu pago…" : "Cancelando la operación…";
+
+      var payload = {
+        chat_id:      data.chat_id,
+        cedula:       data.cedula,
+        monto:        montoNum,
+        concepto:     data.concepto,
+        referencia:   data.referencia,
+        canal:        data.canal,
+        estado:       estado,
+        callback_url: data.callback_url
+      };
+
+      fetch(REGISTRAR_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        mostrarResultado(estado);
+      })
+      .catch(function () {
+        mostrarError(estado);
+      });
+    }
+
+    function mostrarResultado(estado) {
+      var icon    = document.getElementById("r-icon");
+      var actions = document.getElementById("r-actions");
+      actions.style.display = "none";
+      actions.innerHTML = "";
+
+      if (estado === "aprobado") {
+        icon.className = "af-icon af-icon--ok";
+        icon.textContent = "✓";
+        setText("r-title", "¡Pago aprobado!");
+        setText("r-message", "Tu pago fue procesado con éxito. Puedes volver al chat con Aurita para continuar.");
+      } else {
+        icon.className = "af-icon af-icon--cancel";
+        icon.textContent = "✕";
+        setText("r-title", "Pago cancelado");
+        setText("r-message", "La operación fue cancelada. No se realizó ningún cargo. Puedes volver al chat con Aurita.");
+      }
+      document.getElementById("r-ref").innerHTML = "Referencia: <code>" + data.referencia + "</code>";
+      show("scr-result");
+    }
+
+    function mostrarError(estado) {
+      var icon    = document.getElementById("r-icon");
+      var actions = document.getElementById("r-actions");
+
+      icon.className = "af-icon af-icon--error";
+      icon.textContent = "!";
+      setText("r-title", "No se pudo completar");
+      setText("r-message", "Hubo un problema de conexión al confirmar la operación. Verifica tu red e inténtalo de nuevo.");
+      document.getElementById("r-ref").innerHTML = "Referencia: <code>" + data.referencia + "</code>";
+
+      actions.innerHTML = "";
+      var retry = document.createElement("button");
+      retry.className = "af-btn af-btn--primary";
+      retry.textContent = "Reintentar";
+      retry.addEventListener("click", function () { enviarResultado(estado); });
+      actions.appendChild(retry);
+      actions.style.display = "flex";
+
+      show("scr-result");
+    }
+
+    // --- Listeners: el botón confirmar se bloquea tras el primer clic ---
+    var btnConfirm = document.getElementById("btn-confirm");
+    var btnCancel  = document.getElementById("btn-cancel");
+
+    btnConfirm.addEventListener("click", function () {
+      btnConfirm.disabled = true;
+      btnCancel.disabled = true;
+      enviarResultado("aprobado");
+    });
+
+    btnCancel.addEventListener("click", function () {
+      btnConfirm.disabled = true;
+      btnCancel.disabled = true;
+      enviarResultado("rechazado");
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurora Financiera - Recordatorio de pago</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F7FAFC; font-family:Arial, Helvetica, sans-serif; color:#1a1a1a;">
+
+  <!-- Wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F7FAFC; padding:24px 0;">
+    <tr>
+      <td align="center">
+
+        <!-- Contenedor principal -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(11,61,107,0.08);">
+
+          <!-- Encabezado -->
+          <tr>
+            <td style="background-color:#0B3D6B; padding:28px 32px; text-align:center;">
+              <h1 style="margin:0; font-size:22px; font-weight:bold; color:#ffffff; letter-spacing:0.5px;">
+                Aurora Financiera
+              </h1>
+              <p style="margin:6px 0 0; font-size:13px; color:#e7eef5;">
+                Cooperativa de ahorro y crédito
+              </p>
+            </td>
+          </tr>
+
+          <!-- Barra de acento -->
+          <tr>
+            <td style="height:4px; background-color:#1BB8A6; line-height:4px; font-size:0;">&nbsp;</td>
+          </tr>
+
+          <!-- Cuerpo -->
+          <tr>
+            <td style="padding:36px 32px;">
+              <h2 style="margin:0 0 18px; font-size:18px; color:#0B3D6B;">
+                Recordatorio de pago
+              </h2>
+
+              <p style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#333333;">
+                Estimado(a) {{nombre}}, le informamos que su cuota de
+                <strong style="color:#0B3D6B;">${{monto}}</strong> con vencimiento
+                <strong style="color:#0B3D6B;">{{fecha}}</strong> se encuentra pendiente de pago.
+              </p>
+
+              <!-- Caja destacada -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#e7eef5; border-radius:10px; margin:24px 0;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 8px; font-size:13px; color:#0B3D6B;">Monto pendiente</p>
+                    <p style="margin:0; font-size:26px; font-weight:bold; color:#0B3D6B;">${{monto}}</p>
+                    <p style="margin:10px 0 0; font-size:13px; color:#555555;">Vencimiento: <strong>{{fecha}}</strong></p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 28px; font-size:15px; line-height:1.6; color:#333333;">
+                Le invitamos a realizar su pago lo antes posible para mantener su cuenta al día.
+              </p>
+
+
+            </td>
+          </tr>
+
+          <!-- Pie -->
+          <tr>
+            <td style="background-color:#082c4f; padding:24px 32px; text-align:center;">
+              <p style="margin:0 0 6px; font-size:13px; color:#ffffff;">Aurora Financiera</p>
+              <p style="margin:0; font-size:12px; color:#9fb4c9; line-height:1.5;">
+                Este es un mensaje automático, por favor no responda a este correo.<br>
+                &copy; Aurora Financiera. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
