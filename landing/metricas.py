@@ -186,6 +186,8 @@ def compute_metricas():
         {
             'num': 1,
             'nombre': 'Índice de fricción conversacional',
+            'que_mide': 'Cuánto esfuerzo (mensajes) le cuesta al asociado llegar a la '
+                        'respuesta. Menos es mejor.',
             'valor': m1['valor'],
             'unidad': 'msgs/conv.',
             'disponible': m1['disponible'],
@@ -205,6 +207,8 @@ def compute_metricas():
         {
             'num': 2,
             'nombre': 'Eficiencia de campaña de cobranza',
+            'que_mide': 'De cada $100 vencidos, cuántos pesos realmente volvieron a caja. '
+                        'Más alto es mejor.',
             'valor': m2['valor'],
             'unidad': '%',
             'disponible': m2['disponible'],
@@ -224,6 +228,8 @@ def compute_metricas():
         {
             'num': 3,
             'nombre': 'Índice de salud de cartera ponderado',
+            'que_mide': 'Nota de 0 a 100 de la cartera: castiga más las deudas más '
+                        'viejas. Más alto = más sana.',
             'valor': m3['valor'],
             'unidad': 'pts (0–100)',
             'disponible': m3['disponible'],

@@ -159,6 +159,8 @@ def compute_kpis():
         {
             'num': 1,
             'nombre': 'Tasa de auto-contención',
+            'que_mide': 'De cada 100 conversaciones, cuántas resolvió el bot solo, '
+                        'sin pasar a un asesor humano.',
             'valor': k1['valor'],
             'unidad': '%',
             'disponible': k1['disponible'],
@@ -176,6 +178,8 @@ def compute_kpis():
         {
             'num': 2,
             'nombre': 'Tiempo de 1ª respuesta (agente humano)',
+            'que_mide': 'Cuánto tarda un asesor humano en dar la primera respuesta '
+                        'cuando el bot le pasa el caso.',
             'valor': None,
             'unidad': 'min',
             'disponible': False,
@@ -192,6 +196,8 @@ def compute_kpis():
         {
             'num': 3,
             'nombre': 'Conversión de campañas de cobranza',
+            'que_mide': 'De cada 100 mensajes de cobranza enviados, cuántos '
+                        'terminaron en un pago.',
             'valor': None,
             'unidad': '%',
             'disponible': False,
@@ -207,6 +213,8 @@ def compute_kpis():
         {
             'num': 4,
             'nombre': 'NPS Aurora (global)',
+            'que_mide': 'Qué tan dispuestos están los asociados a recomendar Aurora '
+                        '(nivel de satisfacción).',
             'valor': None,
             'unidad': 'pts',
             'disponible': False,
@@ -223,6 +231,8 @@ def compute_kpis():
         {
             'num': 5,
             'nombre': 'Abandono de onboarding digital',
+            'que_mide': 'De cada 100 personas que empiezan a afiliarse en línea, '
+                        'cuántas dejan el proceso a medias.',
             'valor': k5['valor'],
             'unidad': '%',
             'disponible': k5['disponible'],
@@ -239,6 +249,8 @@ def compute_kpis():
         {
             'num': 6,
             'nombre': 'Recuperación de mora temprana',
+            'que_mide': 'De los asociados con 1–30 días de atraso, cuántos se '
+                        'pusieron al día tras el contacto.',
             'valor': k6['valor'],
             'unidad': '%',
             'disponible': k6['disponible'],

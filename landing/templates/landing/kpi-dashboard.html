@@ -77,6 +77,7 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 .k-status.sin_datos{background:var(--gris-soft);color:#556270;}
 .k-status .dot{width:8px;height:8px;border-radius:50%;}
 
+.k-what{font-size:.9rem;color:#37424E;line-height:1.45;margin-bottom:12px;}
 .k-detail{font-size:.82rem;color:var(--af-gray);font-weight:500;background:var(--af-bg-light);border-radius:10px;padding:9px 12px;margin-bottom:12px;}
 .k-missing{font-size:.82rem;color:#556270;background:var(--gris-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;}
 .k-missing i{color:var(--gris);flex-shrink:0;margin-top:1px;}
@@ -84,7 +85,6 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 .k-meta{margin-top:auto;border-top:1px dashed var(--af-border);padding-top:12px;display:flex;flex-direction:column;gap:8px;}
 .k-row{font-size:.78rem;color:var(--af-gray);display:flex;gap:8px;}
 .k-row .lbl{font-weight:700;color:#26313D;flex-shrink:0;min-width:62px;}
-.k-formula{font-family:'Courier New',monospace;font-size:.74rem;background:var(--af-primary);color:#cfe6f5;padding:8px 10px;border-radius:8px;word-break:break-word;line-height:1.4;}
 
 /* ── INDICADOR DE NEGOCIO ── */
 .biz{margin-top:30px;background:linear-gradient(135deg,var(--af-primary),var(--af-primary-dark));color:#fff;border-radius:var(--radius);padding:24px 26px;display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
@@ -118,10 +118,9 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 <div class="wrap">
 
   <div class="intro">
-    <h1>KPIs ejecutivos de la transformación</h1>
-    <p>Cada indicador mide una de las promesas del comité directivo. Los datos se
-       leen en vivo desde la base de datos. Si un indicador aún no tiene datos,
-       se muestra qué hace falta para poder calcularlo — sin cifras inventadas.</p>
+    <h1>KPIs ejecutivos</h1>
+    <p>6 indicadores para saber, de un vistazo, si la transformación está funcionando.
+       Se calculan en vivo desde la base de datos.</p>
     <div class="pills">
       <span class="pill"><span class="dot" style="background:var(--ok)"></span><b>{{ con_datos }}</b> de {{ total_kpis }} con datos reales</span>
       <span class="pill"><span class="dot" style="background:var(--rojo)"></span><b>{{ en_alerta }}</b> en alerta</span>
@@ -170,15 +169,15 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
         {% else %}Pendiente de datos{% endif %}
       </span>
 
+      <div class="k-what">{{ k.que_mide }}</div>
+
       {% if k.detalle %}<div class="k-detail">{{ k.detalle }}</div>{% endif %}
       {% if not k.disponible and k.faltante %}
         <div class="k-missing"><i class="bi bi-info-circle-fill"></i><span>{{ k.faltante }}</span></div>
       {% endif %}
 
       <div class="k-meta">
-        <div class="k-row"><span class="lbl">Umbral</span><span>{{ k.umbral }}</span></div>
-        <div class="k-row"><span class="lbl">Por qué</span><span>{{ k.por_que }}</span></div>
-        <div class="k-formula">{{ k.formula }}</div>
+        <div class="k-row"><span class="lbl">Meta</span><span>{{ k.umbral }}</span></div>
       </div>
     </div>
     {% endfor %}

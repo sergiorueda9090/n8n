@@ -79,19 +79,14 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 .k-status.sin_datos{background:var(--gris-soft);color:#556270;}
 .k-status .dot{width:8px;height:8px;border-radius:50%;}
 
+.k-what{font-size:.9rem;color:#37424E;line-height:1.45;margin-bottom:12px;}
 .k-detail{font-size:.82rem;color:var(--af-gray);font-weight:500;background:var(--af-bg-light);border-radius:10px;padding:9px 12px;margin-bottom:12px;}
 .k-missing{font-size:.82rem;color:#556270;background:var(--gris-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;}
 .k-missing i{color:var(--gris);flex-shrink:0;margin-top:1px;}
 
-/* Cómo la diseñó la IA */
-.k-design{font-size:.82rem;color:var(--af-primary-dark);background:linear-gradient(135deg,rgba(27,184,166,.08),rgba(11,61,107,.05));border:1px solid rgba(27,184,166,.25);border-radius:10px;padding:11px 13px;margin-bottom:12px;display:flex;gap:9px;line-height:1.45;}
-.k-design i{color:var(--af-accent-dark);flex-shrink:0;margin-top:2px;font-size:.95rem;}
-.k-design .lbl{display:block;font-weight:700;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--af-accent-dark);margin-bottom:2px;}
-
 .k-meta{margin-top:auto;border-top:1px dashed var(--af-border);padding-top:12px;display:flex;flex-direction:column;gap:8px;}
 .k-row{font-size:.78rem;color:var(--af-gray);display:flex;gap:8px;}
 .k-row .lbl{font-weight:700;color:#26313D;flex-shrink:0;min-width:62px;}
-.k-formula{font-family:'Courier New',monospace;font-size:.74rem;background:var(--af-primary);color:#cfe6f5;padding:8px 10px;border-radius:8px;word-break:break-word;line-height:1.4;}
 
 .foot{margin-top:26px;font-size:.78rem;color:var(--af-gray-light);text-align:center;}
 
@@ -112,12 +107,10 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 
   <div class="ai-hero">
     <span class="ai-badge"><i class="bi bi-stars"></i> Diseñadas con IA</span>
-    <h1>Métricas no estándar para Aurora</h1>
-    <p>Más allá de los KPIs clásicos, estas métricas fueron diseñadas con asistencia
-       de IA para cruzar señales que normalmente no se miran juntas: el esfuerzo del
-       asociado al conversar, el valor realmente recuperado en cobranza y la severidad
-       (no solo la cantidad) de la mora. Se calculan en vivo desde la base de datos;
-       si una tabla aún está vacía, se explica qué falta — sin cifras inventadas.</p>
+    <h1>Métricas propias de Aurora</h1>
+    <p>3 métricas que los KPIs clásicos no capturan: el esfuerzo del asociado al
+       conversar, el dinero realmente recuperado y qué tan vieja es la mora. Se
+       calculan en vivo desde la base de datos.</p>
     <div class="pills">
       <span class="pill"><span class="dot" style="background:var(--ok)"></span><b>{{ resumen.con_datos }}</b> de {{ resumen.total }} con datos reales</span>
       <span class="pill"><span class="dot" style="background:var(--rojo)"></span><b>{{ resumen.en_alerta }}</b> en alerta</span>
@@ -164,19 +157,15 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
         {% else %}Pendiente de datos{% endif %}
       </span>
 
+      <div class="k-what">{{ m.que_mide }}</div>
+
       {% if m.detalle %}<div class="k-detail">{{ m.detalle }}</div>{% endif %}
       {% if not m.disponible and m.faltante %}
         <div class="k-missing"><i class="bi bi-info-circle-fill"></i><span>{{ m.faltante }}</span></div>
       {% endif %}
 
-      <div class="k-design">
-        <i class="bi bi-stars"></i>
-        <span><span class="lbl">Cómo la diseñó la IA</span>{{ m.diseno }}</span>
-      </div>
-
       <div class="k-meta">
-        <div class="k-row"><span class="lbl">Umbral</span><span>{{ m.umbral }}</span></div>
-        <div class="k-formula">{{ m.formula }}</div>
+        <div class="k-row"><span class="lbl">Meta</span><span>{{ m.umbral }}</span></div>
       </div>
     </div>
     {% endfor %}
