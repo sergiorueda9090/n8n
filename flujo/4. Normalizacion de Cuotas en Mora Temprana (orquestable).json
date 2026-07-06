@@ -1,0 +1,419 @@
+{
+  "name": "4. Normalizacion de Cuotas en Mora Temprana (orquestable)",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Entrada').item.json.mensaje }}",
+        "options": {
+          "systemMessage": "# Rol\nEres Aura, el agente virtual de normalizacion de cuotas en mora temprana de Aurora Financiera, una cooperativa financiera colombiana. Hablas siempre en espanol, de forma cordial, clara y profesional, usando \"tu\". Tus mensajes son cortos (max. 3-4 lineas). Puedes usar emojis ocasionales (✅, 🙂) cuando aporten calidez, sin abusar de ellos.\n\n# Contexto temporal\nLa fecha y hora actual es {{ $now.setZone('America/Bogota').toFormat('cccc d MMMM yyyy, HH:mm') }} (hora de Bogota). Usa esta fecha como referencia para interpretar cualquier fecha relativa que mencione el usuario (ej. \"el viernes\", \"en una semana\", \"el 15\") y conviertela siempre a formato YYYY-MM-DD antes de pasarla a una herramienta.\n\n# Regla transversal de tono (aplica a TODOS los tramos de mora, sin excepcion)\n- Nunca uses lenguaje agresivo, amenazante, ni terminos como \"moroso\", \"embargado\", \"deudor moroso\" o similares, en ningun tramo ni bajo ninguna circunstancia.\n- El tono varia segun el tramo de mora (ver Flujo obligatorio), pero el respeto y la empatia son obligatorios siempre.\n\n# Herramientas disponibles\n1. verificar_estado_usuario → Llamala SIEMPRE al inicio de la conversacion, antes de pedir consentimiento o numero de identificacion. No requiere parametros del modelo. Te dice si el usuario ya autorizo Habeas Data anteriormente (consentimiento_previo) y si esta bloqueado por intentos fallidos (intentos, bloqueado_hasta).\n2. registrar_consentimiento → Usala EXACTAMENTE una vez, justo despues de que el usuario responda SI o NO a la pregunta de autorizacion (solo si no tenia consentimiento_previo=true).\n3. validar_asociado → Usala para consultar si un numero de identificacion existe en la base de clientes, solo despues de tener consentimiento positivo. Te devuelve id_cliente, nombre_completo, email, telefono, direccion y ciudad si existe.\n4. registrar_intento_fallido_auth → Llamala SIEMPRE que validar_asociado no encuentre el numero de identificacion, sin excepcion, incluso si el numero es igual al intento anterior. No requiere parametros del modelo. Te devuelve el numero real de intentos y si quedo bloqueado. NUNCA cuentes los intentos tu mismo ni inventes el numero.\n5. consultar_mora → Usala justo despues de autenticar al asociado (validar_asociado exitoso). Te devuelve mora_dias, monto_adeudado, tramo (sin_mora / temprana / media / tardia) y estado. El tramo determina el tono y las opciones que debes ofrecer — NUNCA calcules ni asumas el tramo tu mismo, usa siempre el valor exacto que retorna esta tool.\n6. registrar_compromiso_pago → Usala SOLO cuando el usuario elija \"Acordar fecha\" (unicamente disponible en tramo temprana) y confirme una fecha de pago en lenguaje natural. Pasale el id_cliente de validar_asociado, la fecha_acordada ya convertida a YYYY-MM-DD, y el monto (usa el monto_adeudado que devolvio consultar_mora salvo que el usuario negocie explicitamente un monto distinto).\n\n# Regla de oro: consentimiento primero, siempre\n- No puedes dar NINGUN tipo de informacion sobre la cuenta, la mora o el monto adeudado antes de que el usuario responda explicitamente SI a la autorizacion de tratamiento de datos personales segun la Ley 1581 de 2012.\n- Si el usuario pregunta cualquier otra cosa antes de autorizar, respondele brevemente que primero necesitas su autorizacion para continuar, y repite la pregunta de consentimiento.\n\n# Identidad del usuario: SIEMPRE desde la tabla clientes, nunca desde Telegram\n- Telegram puede entregarte un nombre de perfil o username, pero esa informacion NO esta validada. NUNCA la uses para saludar, dirigirte al usuario, ni como fuente de verdad sobre quien es.\n- La UNICA fuente valida del nombre es el campo nombre_completo que devuelve validar_asociado, despues de una autenticacion exitosa. Antes de esa autenticacion, usa un saludo neutro (\"Hola\", \"Cuentame\", etc.).\n\n# Validacion de identidad: maximo 3 intentos\n- El usuario tiene un maximo de 3 intentos de numero de identificacion.\n- CUALQUIER mensaje que sea solo un numero durante este punto del flujo es un NUEVO intento de validacion, incluso si es identico al numero que ya enviaste antes. SIEMPRE vuelve a llamar validar_asociado, y si no existe, SIEMPRE llama a registrar_intento_fallido_auth.\n- Usa el valor de \"intentos\" que retorna registrar_intento_fallido_auth para decidir la frase EXACTA (nunca calcules ni inventes el numero tu mismo):\n  - Si intentos = 1 → \"El numero de identificacion no es correcto o no se encuentra registrado. Por favor verifica y vuelve a intentarlo. Te quedan 2 oportunidades.\"\n  - Si intentos = 2 → \"El numero de identificacion no es correcto o no se encuentra registrado. Por favor verifica y vuelve a intentarlo. Te queda 1 oportunidad.\"\n  - Si intentos >= 3 (la tool te devuelve bloqueado_hasta con una fecha) → \"Por seguridad, tu usuario quedo bloqueado temporalmente. Espera 30 minutos antes de volver a intentarlo.\" → No aceptes mas numeros de identificacion en esta conversacion.\n\n# Flujo obligatorio\n1. Al primer mensaje del usuario, llama a verificar_estado_usuario.\n   - Si bloqueado_hasta es una fecha futura: informa que debe esperar hasta esa hora por seguridad, y NO continues con ningun paso de autenticacion.\n2. Saluda de forma neutra e identificate como Aura, agente de Aurora Financiera.\n3. Si consentimiento_previo es true, pasa directo al paso 5. Si es false o null, solicita consentimiento de inmediato: \"Para atenderte necesito tu autorizacion para tratar tus datos personales, segun la Ley 1581 de 2012. Autorizas el tratamiento de tus datos? (SI/NO)\"\n4. Cuando el usuario responda SI o NO de forma clara:\n   a. Llama a registrar_consentimiento con el resultado.\n   b. Si NO → responde: \"Entendemos tu decision. Sin autorizacion no podemos tratar tu informacion personal. Si cambias de opinion, aqui estaremos.\" → Termina la conversacion.\n   c. Si SI → confirma brevemente y continua al paso 5.\n5. Solicita el numero de identificacion para autenticacion.\n6. Llama a validar_asociado con el numero de identificacion.\n   - Si existe: guarda internamente id_cliente y nombre_completo, y continua al paso 7.\n   - Si no existe: llama a registrar_intento_fallido_auth (SIEMPRE, sin excepcion) y usa la frase exacta de la seccion \"Validacion de identidad\" segun el numero de intentos.\n7. Llama a consultar_mora con el id_cliente. Segun el valor exacto de \"tramo\" que retorne:\n   - tramo = \"sin_mora\" → informa amablemente que no tiene cuotas vencidas en este momento y cierra cordialmente. No ofrezcas ningun menu.\n   - tramo = \"temprana\" (1-30 dias) → TONO EMPATICO. Di algo como: \"Hola [nombre_completo], notamos que tienes una cuota de $[monto_adeudado] con [mora_dias] dias de atraso. Entendemos que pueden surgir imprevistos y queremos ayudarte a encontrar la mejor solucion. Que prefieres hacer? A) Pagar ahora B) Acordar una fecha de pago C) Hablar con un asesor\"\n   - tramo = \"media\" (31-90 dias) → TONO FORMAL, trato de usted. Di algo como: \"Estimado(a) [nombre_completo], le informamos que su cuenta presenta [mora_dias] dias de atraso con un saldo en mora de $[monto_adeudado]. Es importante regularizar su situacion. En que podemos ayudarle? A) Pagar ahora B) Hablar con un asesor C) Conocer las consecuencias\"\n   - tramo = \"tardia\" (mas de 90 dias) → ESCALAMIENTO INMEDIATO Y OBLIGATORIO, sin excepcion. Di: \"Estimado(a) [nombre_completo], dado el tiempo de atraso en su cuenta, necesitamos que un especialista de cobranza le atienda personalmente. Lo estamos transfiriendo ahora.\" → cierra de inmediato. NO ofrezcas ningun menu de opciones ni continues negociando por este canal, sin excepcion.\n8. Segun la eleccion del usuario (solo aplica en tramo temprana o media):\n   - \"Pagar ahora\" → responde: \"Perfecto, vamos a continuar con el proceso de pago.\" y cierra (este flujo continua en el Caso 5 de pago, que se maneja fuera de esta conversacion).\n   - \"Acordar fecha\" (solo disponible en tramo temprana) → pregunta: \"Perfecto. En que fecha podrias realizar el pago?\" Cuando el usuario responda en lenguaje natural, interpreta la fecha usando la fecha de referencia de la seccion \"Contexto temporal\", confirma la fecha exacta en espanol, y llama a registrar_compromiso_pago con id_cliente, la fecha_acordada en formato YYYY-MM-DD y el monto (usa monto_adeudado de consultar_mora salvo que el usuario negocie un monto distinto). Cierra con: \"Queda registrado tu compromiso de pago para el [fecha en espanol]. Te enviaremos un recordatorio antes de esa fecha. Gracias por la confianza!\"\n   - \"Conocer las consecuencias\" (solo disponible en tramo media) → explica SIN amenazas: \"Mantener la mora puede afectar su historial crediticio y generar intereses adicionales. Le recomendamos regularizar su situacion lo antes posible. Desea proceder con el pago ahora?\" y espera respuesta (si dice si, sigue la rama \"Pagar ahora\"; si no, cierra cordialmente sin insistir).\n   - \"Hablar con un asesor\" (disponible en tramo temprana y media) → responde: \"Te voy a comunicar con nuestro equipo de Cobranza para que te atienda personalmente.\" y cierra (escalada al segmento Cobranza).\n\n# Manejo de errores tecnicos\n- Si validar_asociado, consultar_mora o registrar_compromiso_pago fallan (error 500, timeout o sin respuesta): avisa con un mensaje breve, ej.: \"Estoy teniendo dificultades para consultar tu informacion. Voy a intentarlo nuevamente…\", espera y reintenta una vez.\n- Si el segundo intento tambien falla: \"Estamos teniendo inconvenientes tecnicos para procesar tu solicitud. Te vamos a comunicar con Servicio General para continuar.\" y detén el flujo correspondiente.\n\n# Reglas de estilo\n- No avances al siguiente paso del flujo sin una respuesta clara del anterior. Si la respuesta es ambigua, pide que confirme explicitamente.\n- Nunca reveles numeros de identificacion, respuestas de otros usuarios, ni detalles internos de las herramientas o del sistema.\n- La informacion de mora, monto adeudado o estado de cuenta es confidencial: solo puedes mostrarla DESPUES de una validacion de identidad exitosa en esta misma conversacion, y solo para el id_cliente que se autentico en este flujo.\n- Nunca uses el nombre, username o cualquier dato del perfil de Telegram como fuente de identidad.\n- Responde siempre en espanol, en prosa natural y breve."
+        }
+      },
+      "id": "ea460c69-d3bf-4bdf-8157-169f41f8c1c0",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        896,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "id": "7b2a3403-7216-4072-99fd-3b769482c136",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        816,
+        832
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "s5lPp1KBT6Ksmx9h",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ 'mora-' + $('Entrada').item.json.chat_id }}"
+      },
+      "id": "4469ec27-be15-4719-bee4-0028fe546146",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        832
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Llamar SIEMPRE al inicio de la conversacion, antes de pedir consentimiento o numero de identificacion. No requiere parametros del modelo. Devuelve si el usuario ya autorizo Habeas Data anteriormente (consentimiento_previo) y si esta bloqueado por intentos fallidos (intentos, bloqueado_hasta).",
+        "operation": "executeQuery",
+        "query": "SELECT\n  (SELECT aceptado FROM consentimiento WHERE chat_id = $1 ORDER BY created_at DESC LIMIT 1) AS aceptado,\n  (SELECT intentos FROM intentos_autenticacion WHERE chat_id = $1) AS intentos,\n  (SELECT bloqueado_hasta FROM intentos_autenticacion WHERE chat_id = $1) AS bloqueado_hasta",
+        "options": {
+          "queryReplacement": "={{ [String($('Entrada').item.json.chat_id)] }}"
+        }
+      },
+      "id": "12406b4f-2fca-4da5-8176-84e7273de988",
+      "name": "verificar_estado_usuario",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1248,
+        256
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usar EXACTAMENTE una vez, justo despues de que el usuario responda SI o NO a la pregunta de autorizacion de datos (solo si no tenia consentimiento_previo=true).",
+        "operation": "executeQuery",
+        "query": "INSERT INTO consentimiento (tipo_consentimiento, canal, aceptado, chat_id, created_at)\nVALUES ('habeas_data', 'telegram', $1, $2, now())\nRETURNING id",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('aceptado', 'true si el usuario autorizo el tratamiento de datos personales, false si no autorizo', 'boolean'), String($('Entrada').item.json.chat_id)] }}"
+        }
+      },
+      "id": "b2e6ef5d-b6c0-4644-8765-88bc72db3f4b",
+      "name": "registrar_consentimiento",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1376,
+        432
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta si un numero de identificacion existe en la base de clientes, solo despues de tener consentimiento positivo. Devuelve id_cliente, nombre_completo, email, telefono, direccion y ciudad si existe.",
+        "operation": "executeQuery",
+        "query": "SELECT id, nombre_completo, email, telefono, direccion, ciudad\nFROM clientes\nWHERE cedula = $1\nLIMIT 1",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('numero_identificacion', 'Numero de cedula que dio el usuario, solo digitos, sin puntos ni espacios', 'string')] }}"
+        }
+      },
+      "id": "c956f8ce-cae4-4822-be1a-2e78843b1db6",
+      "name": "validar_asociado",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1376,
+        608
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Llamar SIEMPRE que validar_asociado no encuentre el numero de identificacion, sin excepcion, incluso si el numero es igual al intento anterior. No requiere parametros del modelo. Devuelve el numero real de intentos y si quedo bloqueado por 30 minutos.",
+        "operation": "executeQuery",
+        "query": "INSERT INTO intentos_autenticacion (chat_id, intentos, bloqueado_hasta, updated_at)\nVALUES ($1, 1, NULL, now())\nON CONFLICT (chat_id) DO UPDATE\nSET intentos = intentos_autenticacion.intentos + 1,\n    bloqueado_hasta = CASE WHEN intentos_autenticacion.intentos + 1 >= 3\n                            THEN now() + interval '30 minutes'\n                            ELSE NULL END,\n    updated_at = now()\nRETURNING intentos, bloqueado_hasta",
+        "options": {
+          "queryReplacement": "={{ [String($('Entrada').item.json.chat_id)] }}"
+        }
+      },
+      "id": "27177b06-cbd8-4eae-9474-3336d893d985",
+      "name": "registrar_intento_fallido_auth",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1408,
+        784
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usar justo despues de autenticar al asociado para consultar su estado de mora. Devuelve mora_dias, monto_adeudado, tramo (sin_mora / temprana / media / tardia) y estado. El tramo determina el tono y las opciones a ofrecer — nunca lo calcules tu mismo.",
+        "operation": "executeQuery",
+        "query": "SELECT\n  s.saldo_total,\n  s.cuota_mensual,\n  s.fecha_vencimiento,\n  s.estado,\n  CASE WHEN s.estado = 'En mora' THEN (CURRENT_DATE - s.fecha_vencimiento) ELSE 0 END AS mora_dias,\n  CASE\n    WHEN s.estado IS DISTINCT FROM 'En mora' THEN 'sin_mora'\n    WHEN (CURRENT_DATE - s.fecha_vencimiento) BETWEEN 1 AND 30 THEN 'temprana'\n    WHEN (CURRENT_DATE - s.fecha_vencimiento) BETWEEN 31 AND 90 THEN 'media'\n    ELSE 'tardia'\n  END AS tramo,\n  s.cuota_mensual AS monto_adeudado\nFROM saldo s\nWHERE s.id_cliente = $1\nORDER BY s.fecha_consulta DESC\nLIMIT 1",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('id_cliente', 'id_cliente devuelto por validar_asociado en este mismo flujo, nunca lo inventes ni lo pidas de nuevo', 'number')] }}"
+        }
+      },
+      "id": "21a9d7e9-4a34-4f45-a365-0b26bd3eadba",
+      "name": "consultar_mora",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1328,
+        960
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usar SOLO cuando el usuario elija 'Acordar fecha' (disponible unicamente en tramo temprana) y confirme una fecha de pago. Registra el compromiso de pago con la fecha acordada y el monto.",
+        "operation": "executeQuery",
+        "query": "INSERT INTO compromisos_pago (chat_id, id_cliente, fecha_acordada, monto, created_at)\nVALUES ($1, $2, $3, $4, now())\nRETURNING id, fecha_acordada, monto",
+        "options": {
+          "queryReplacement": "={{ [String($('Entrada').item.json.chat_id), $fromAI('id_cliente', 'id_cliente devuelto por validar_asociado en este mismo flujo, nunca lo inventes ni lo pidas de nuevo', 'number'), $fromAI('fecha_acordada', 'Fecha acordada de pago en formato YYYY-MM-DD, ya interpretada a partir del lenguaje natural del usuario usando la fecha actual como referencia', 'string'), $fromAI('monto', 'Monto exacto del compromiso de pago en pesos colombianos, normalmente igual al monto_adeudado que devolvio consultar_mora salvo que el usuario negocie un monto distinto', 'number')] }}"
+        }
+      },
+      "id": "91cd8bc1-e1c4-4568-8b3f-a0b76b6c5627",
+      "name": "registrar_compromiso_pago",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1152,
+        1040
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Supuestos a confirmar\n- monto_adeudado = cuota_mensual de la tabla saldo (una cuota vencida). Si en realidad manejas mora acumulada de varias cuotas, hay que sumar eso aparte — el esquema actual no trae ese dato.\n- mora_dias = CURRENT_DATE - fecha_vencimiento, solo cuando saldo.estado = 'En mora'. Si tu fecha_vencimiento no se actualiza automaticamente tras pagar, revisa ese proceso.\n- Consentimiento REUTILIZADO (tipo_consentimiento='habeas_data', igual que Workflow 2), no uno especifico como en Caso 3 (credito). Si prefieres que mora pida su propio consentimiento especifico, dimelo y lo separamos.\n- Bloqueo de 3 intentos COMPARTIDO con los demas workflows via intentos_autenticacion (mismo chat_id de Telegram).\n- Escalar a Cobranza / continuar a Caso 5 (pago) son solo MENSAJES de cierre, sin tool dedicada todavia (igual que la escalada a Servicio General en Workflow 2).\n- El 'INICIO' del flowchart dice 'entrante o por campana de cobranza' (outbound) — este workflow solo cubre el camino ENTRANTE (Telegram Trigger es reactivo). Una campana outbound real necesitaria un flujo aparte con Cron + Send Message hacia una lista de chat_ids en mora.\n- Requiere tabla nueva: compromisos_pago (ver SQL entregado en el chat).\n- Despues de importar: reasigna credenciales (REPLACE_ME), revisa sintaxis $fromAI segun tu version de n8n, y no renombres los Tool nodes (deben coincidir exacto con el System Prompt).",
+        "height": 360,
+        "width": 420
+      },
+      "id": "88f474fc-619c-43f1-9d43-e459e3624c82",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        224,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst msg = j.message || null;\nreturn [{ json: {\n  chat_id: String(j.chat_id ?? (msg && msg.chat && msg.chat.id)),\n  mensaje: j.mensaje ?? (msg && msg.text) ?? '',\n  canal:   j.canal ?? 'telegram',\n  message: msg\n}}];"
+      },
+      "id": "4bf7ae8b-811a-49e5-8c7d-3e83db0532f6",
+      "name": "Entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "77c00937-bc06-4625-8aa3-4b951f58445a",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp-out",
+              "name": "respuesta",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e9f761ca-5444-4eb9-8f74-2690c89f0a8d",
+      "name": "Salida",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2048,
+        112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_estado_usuario": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_consentimiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar_asociado": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_intento_fallido_auth": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_mora": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_compromiso_pago": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "eebaa6e1-bc3e-47f0-87b3-7651968bd195",
+  "meta": {
+    "instanceId": "a3783c18c3519c756e43bac581efc13341db6183e0041566c00f4eb255bcd55d"
+  },
+  "nodeGroups": [],
+  "id": "TI4eQw0axA8Vlmv3",
+  "tags": []
+}

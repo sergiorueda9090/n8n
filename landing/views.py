@@ -1,14 +1,17 @@
 import json
+import logging
 import uuid
 
 from django.db import connection, DatabaseError
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
 from . import n8n_client
 from . import kpis as kpis_service
+from . import metricas as metricas_service
+from . import autotesting
 
 
 def home(request):
@@ -152,6 +155,98 @@ def kpi_dashboard(request):
         'en_alerta': en_alerta,
         'sin_datos': len(kpis) - con_datos,
     })
+
+
+def metricas_disenador(request):
+    """
+    Diseñador de métricas con IA: 3 métricas no estándar de Aurora, calculadas
+    en vivo desde Supabase (ver `landing/metricas.py`).
+    """
+    metricas, resumen = metricas_service.compute_metricas()
+    return render(request, 'landing/metricas.html', {
+        'metricas': metricas,
+        'resumen': resumen,
+    })
+
+
+def testing_report(request):
+    """
+    Informe ejecutivo de auto-testing. Lee el JSON acumulado por
+    `manage.py run_autotests` y muestra el último ciclo, la comparación con el
+    ciclo anterior (reducción de errores) y las mejoras sugeridas por la IA.
+    """
+    informe = autotesting.cargar_informe()
+    ciclos = informe['ciclos']
+    ctx = {
+        'flujos': autotesting.FLUJOS_CRITICOS,
+        'total_casos': len(autotesting.CASOS),
+        'hay_datos': bool(ciclos),
+    }
+
+    if ciclos:
+        actual = ciclos[-1]
+        previo = ciclos[-2] if len(ciclos) > 1 else None
+        # Mejoras sugeridas: casos que no pasaron en el último ciclo.
+        sugerencias = [c for c in actual['casos'] if c['veredicto'] != 'pasa']
+        # Delta de errores respecto al ciclo anterior.
+        delta = None
+        if previo:
+            delta = previo['resumen']['errores_total'] - actual['resumen']['errores_total']
+        ctx.update({
+            'actual': actual,
+            'previo': previo,
+            'sugerencias': sugerencias,
+            'delta_errores': delta,
+            'num_ciclos': len(ciclos),
+        })
+
+    return render(request, 'landing/testing.html', ctx)
+
+
+@require_POST
+def run_autotests_now(request):
+    """
+    Ejecuta la suite de auto-testing (un ciclo nuevo) desde el botón de /testing/
+    y redirige de vuelta al informe. Es síncrono: la petición espera a que
+    terminen los ~18 casos, por eso el botón muestra un overlay de "ejecutando".
+    """
+    from datetime import datetime, timezone
+    timestamp = datetime.now(timezone.utc).isoformat()
+    ciclo = autotesting.correr_suite(timestamp)
+    autotesting.guardar_ciclo(ciclo)
+    return redirect('landing:testing_report')
+
+
+def run_autotests_stream(request):
+    """
+    Ejecuta la suite y transmite el progreso CASO A CASO por Server-Sent Events
+    (text/event-stream). El overlay de /testing/ lo consume con EventSource y va
+    pintando cada caso a medida que termina; al recibir el evento 'fin' guarda el
+    ciclo y devuelve el número para que el front recargue el informe.
+
+    Es GET (EventSource no permite POST). Muta estado (añade un ciclo), aceptable
+    por ser una herramienta interna de QA.
+    """
+    from datetime import datetime, timezone
+    timestamp = datetime.now(timezone.utc).isoformat()
+
+    def eventos():
+        try:
+            for ev in autotesting.iter_casos(timestamp):
+                if ev['tipo'] == 'fin':
+                    numero = autotesting.guardar_ciclo(ev['ciclo'])
+                    payload = {'tipo': 'fin', 'numero': numero,
+                               'resumen': ev['ciclo']['resumen']}
+                    yield f'data: {json.dumps(payload, ensure_ascii=False)}\n\n'
+                else:
+                    yield f'data: {json.dumps(ev, ensure_ascii=False)}\n\n'
+        except Exception as exc:  # noqa: BLE001 — cualquier fallo se informa al front
+            yield f'data: {json.dumps({"tipo": "error", "mensaje": str(exc)})}\n\n'
+
+    resp = StreamingHttpResponse(eventos(), content_type='text/event-stream')
+    resp['Cache-Control'] = 'no-cache'
+    resp['X-Accel-Buffering'] = 'no'  # evita buffering en proxies (nginx/apache)
+    return resp
 
 
 # Límites de tamaño (sobre el contenido ya decodificado)

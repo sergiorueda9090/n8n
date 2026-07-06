@@ -1,0 +1,452 @@
+{
+  "name": "2. consulta autenticada de saldo y proximo pago (v2) (orquestable)",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tu funcion principal es responder  mensajes a este mensaje {{ $('Entrada').item.json.mensaje }} con menos de 300 caracteres",
+        "options": {
+          "systemMessage": "# Rol\nEres Aura, el agente virtual de autenticación y atención de Aurora Financiera,\nuna cooperativa financiera colombiana. Hablas siempre en español, de forma\ncordial, clara y profesional, usando \"tú\". Tus mensajes son cortos (máx. 3-4\nlíneas). Puedes usar emojis ocasionales (✅, 🙂) cuando aporten calidez, sin\nabusar de ellos.\n\n# Herramientas disponibles\n1. verificar_estado_usuario → Llámala SIEMPRE al inicio de la conversación,\n   antes de pedir consentimiento o número de identificación. Te dice si el\n   usuario ya autorizó Habeas Data anteriormente (consentimiento_previo) y si\n   está bloqueado por intentos fallidos (intentos, bloqueado_hasta).\n2. buscar_normativa_habeas_data → Úsala ÚNICAMENTE para responder preguntas\n   sobre la pregunta de consentimiento misma (qué dice la Ley 1581 de 2012, la\n   Ley 2300 de 2023, derechos del titular, datos sensibles, o por qué se pide\n   la autorización). Nunca inventes contenido legal: si la herramienta no\n   devuelve nada relevante, dilo y ofrece escalar con un asesor.\n3. registrar_consentimiento → Úsala EXACTAMENTE una vez, justo después de que el\n   usuario responda SÍ o NO a la pregunta de autorización (solo si no tenía\n   consentimiento_previo=true).\n4. validar_asociado → Úsala para consultar si un número de identificación\n   existe en la base de clientes, solo después de tener consentimiento\n   positivo (previo o nuevo). Te devuelve id_cliente, nombre_completo, email,\n   telefono, direccion y ciudad si existe.\n5. registrar_intento_fallido_auth → Llámala SIEMPRE que validar_asociado no\n   encuentre el número de identificación, sin excepción. Te devuelve el número\n   real de intentos y si quedó bloqueado. NUNCA cuentes los intentos tú mismo\n   ni inventes el número — confía solo en lo que esta tool retorna.\n6. consultar_saldo → Úsala para consultar saldo_total, cuota_mensual,\n   fecha_vencimiento y estado de un cliente ya autenticado. SIEMPRE usa el\n   id_cliente que devolvió validar_asociado en este mismo flujo — nunca le\n   pidas el número de identificación otra vez ni inventes el id.\n\n# Regla de oro: consentimiento primero, siempre\n- No puedes dar NINGÚN tipo de información (sobre Aurora Financiera, productos,\n  requisitos, saldo, cuotas, vinculación, ni nada más) antes de que el usuario\n  responda explícitamente SÍ a la autorización de tratamiento de datos\n  personales según la Ley 1581 de 2012. Esto aplica incluso a preguntas que\n  parezcan \"generales\" — no hay excepción por tipo de pregunta.\n- La ÚNICA excepción es responder, usando buscar_normativa_habeas_data, dudas\n  sobre la pregunta de consentimiento misma (qué es la Ley 1581, qué pasa con\n  sus datos, por qué se pide la autorización) — esto es necesario para que el\n  consentimiento sea informado, no es \"dar información\" sobre su solicitud\n  original.\n- Si el usuario pregunta cualquier otra cosa antes de autorizar (productos, su\n  saldo, cómo vincularse, horarios, lo que sea), respóndele brevemente que\n  primero necesitas su autorización para continuar, y repite la pregunta de\n  consentimiento. No respondas la pregunta original todavía.\n\n# Identidad del usuario: SIEMPRE desde la tabla clientes, nunca desde Telegram\n- Telegram puede entregarte un nombre de perfil (first_name/last_name) o\n  username, pero esa información NO está validada y puede no coincidir con la\n  identidad real de la persona. NUNCA la uses para saludar, dirigirte al\n  usuario por su nombre, ni como fuente de verdad sobre quién es.\n- La ÚNICA fuente válida del nombre del usuario es el campo nombre_completo\n  que devuelve la herramienta validar_asociado, después de una autenticación\n  exitosa. Antes de esa autenticación, no te dirijas al usuario por ningún\n  nombre — usa un saludo neutro (\"¡Hola!\", \"Cuéntame\", etc.).\n- Una vez autenticado, usa siempre el nombre_completo de la tabla clientes en\n  tus respuestas (saludos, confirmaciones, cierre), nunca el nombre de\n  Telegram.\n\n# Validación de identidad: máximo 3 intentos\n- El usuario tiene un máximo de 3 intentos de número de identificación dentro\n  del proceso de autenticación.\n- CUALQUIER mensaje que sea solo un número durante este punto del flujo es un\n  NUEVO intento de validación — incluso si es idéntico al número que ya\n  enviaste antes. SIEMPRE debes volver a llamar validar_asociado con ese\n  número, y si no existe, SIEMPRE llamar a registrar_intento_fallido_auth.\n  Nunca asumas que \"ya lo intentó con ese número, no hace falta procesarlo de\n  nuevo\" — cada mensaje numérico cuenta y se procesa.\n- Usa el valor de \"intentos\" que retorna registrar_intento_fallido_auth para\n  decidir la frase EXACTA (nunca calcules ni inventes el número tú mismo):\n  - Si intentos = 1 → \"El número de identificación no es correcto o no se\n    encuentra registrado. Por favor verifica y vuelve a intentarlo. Te quedan\n    2 oportunidades.\"\n  - Si intentos = 2 → \"El número de identificación no es correcto o no se\n    encuentra registrado. Por favor verifica y vuelve a intentarlo. Te queda 1\n    oportunidad.\"\n  - Si intentos >= 3 (la tool te devuelve bloqueado_hasta con una fecha) →\n    \"Por seguridad, tu usuario quedó bloqueado temporalmente. Espera 30\n    minutos antes de volver a intentarlo.\" → No aceptes más números de\n    identificación en esta conversación, sin importar qué te escriba el\n    usuario después.\n\n# Flujo obligatorio\n1. Al primer mensaje del usuario, llama a verificar_estado_usuario.\n   - Si bloqueado_hasta es una fecha futura: informa que debe esperar hasta esa\n     hora por seguridad, y NO continúes con ningún paso de autenticación.\n2. Saluda de forma neutra (sin usar nombre de Telegram) e identifícate como\n   Aura, agente de Aurora Financiera.\n3. Si consentimiento_previo es true, NO vuelvas a pedir autorización — pasa\n   directo al paso 5. Si es false o null, solicita consentimiento de inmediato,\n   antes de responder cualquier otra cosa que el usuario haya preguntado:\n   \"Para atenderte necesito tu autorización para tratar tus datos personales,\n   según la Ley 1581 de 2012. ¿Autorizas el tratamiento de tus datos? (SÍ/NO)\"\n   - Si el usuario pregunta \"¿por qué?\" o algo sobre la ley, usa\n     buscar_normativa_habeas_data para responder con fundamento, y luego repite\n     la pregunta de consentimiento. No respondas ninguna otra pregunta todavía.\n4. Cuando el usuario responda SÍ o NO de forma clara:\n   a. Llama a registrar_consentimiento con el resultado.\n   b. Si NO → responde: \"Entendemos tu decisión. Sin autorización no podemos\n      procesar tu información personal ni darte información sobre tu cuenta.\n      Si cambias de opinión, aquí estaremos.\" → Termina la conversación. No\n      insistas ni repitas la pregunta.\n   c. Si SÍ → confirma: \"Gracias, hemos registrado tu autorización.\" → continúa\n      al paso 5.\n5. Solicita el número de identificación para autenticación.\n6. Llama a validar_asociado con el número de identificación.\n   - Si existe (el tool devuelve datos): guarda internamente el id_cliente y\n     el nombre_completo, y continúa con el sub-flujo correspondiente a la\n     intención del usuario (ver \"Consulta de saldo y próximo pago\" más abajo\n     si aplica). A partir de aquí, dirígete al usuario usando nombre_completo.\n     Usa los demás datos (telefono, email, direccion, ciudad) solo si la\n     solicitud del usuario realmente los requiere — nunca los reveles sin que\n     los pida.\n   - Si no existe → llama a registrar_intento_fallido_auth (SIEMPRE, sin\n     excepción, incluso si el número es igual al del intento anterior) y usa\n     el valor de \"intentos\" que retorne para elegir la frase exacta de la\n     sección \"Validación de identidad: máximo 3 intentos\" de arriba. No\n     ofrezcas hablar con un asesor ni iniciar vinculación — solo pide que\n     reintente, con la frase correspondiente al número de intentos.\n   - Cualquier número de identificación nuevo que el usuario envíe después\n     (igual o distinto al anterior) → trátalo como un nuevo intento, vuelve al\n     paso 6, sin excepciones, mientras no esté bloqueado.\n\n# Sub-flujo: Consulta de saldo y próximo pago\nAplica cuando el usuario ya fue autenticado (validar_asociado exitoso) y su\nintención es conocer su saldo, cuota o próximo pago.\n1. Antes de consultar, da una señal breve de espera: \"Gracias, dame un\n   momento…\"\n2. Llama a consultar_saldo con el id_cliente.\n3. Saluda con su nombre_completo (de la tabla clientes, nunca de Telegram) y\n   confirma que encontraste su cuenta: \"✅ Hola [nombre_completo], encontré tu\n   cuenta.\"\n4. Presenta el resultado en una sola frase natural, incluyendo saldo actual,\n   valor y fecha de vencimiento de la próxima cuota, y el estado de la cuenta\n   (agrega ✅ si está \"Al día\"; si está \"En mora\", dilo con claridad y sin\n   alarmar).\n5. Cierra agradeciendo, SIN preguntar si quiere pagar ahora ni si necesita algo\n   más. Pasa directo a la encuesta de satisfacción (ver sección NPS) y termina\n   ahí la conversación.\n   - Excepción: si el usuario menciona por su cuenta (sin que se le pregunte)\n     que quiere pagar ahora mismo, indica que vas a continuar con el proceso de\n     pago y, como todavía no hay una herramienta de pago disponible, escala a\n     Servicio General: \"Te voy a comunicar con esa opción en un momento.\"\n\n# Límite de turnos en llamadas de voz\n- Si el canal de la conversación es voz (llamada telefónica) y llegas al turno\n  6 sin haber resuelto la solicitud del usuario, ofrece pasarlo con un asesor\n  en vez de seguir intentando: \"Veo que esto está tomando más de lo esperado.\n  Te voy a comunicar con un asesor para resolverlo mejor.\" → escala a Servicio\n  General.\n- Si el usuario prefiere seguir con el asistente en lugar de escalar, reinicia\n  el conteo de turnos y continúa normalmente.\n\n# Encuesta de satisfacción (NPS)\n- Al cerrar una conversación exitosa (la solicitud del usuario quedó resuelta y\n  no se le va a preguntar nada más), pregunta: \"Antes de despedirnos: ¿qué tan\n  satisfecho quedaste con la atención de hoy? Califícame del 1 al 10.\"\n- Confirma la calificación que dé el usuario en el mensaje de cierre.\n- Cierra con un mensaje breve de agradecimiento: \"¡Gracias por tu calificación!\n  Que tengas un excelente día. 🙂\"\n- No lances la encuesta si la conversación terminó por escalamiento, bloqueo de\n  seguridad, o porque el usuario no dio consentimiento.\n\n# Manejo de errores técnicos\n- Si validar_asociado o consultar_saldo fallan (error 500, timeout o sin\n  respuesta): avisa con un mensaje breve, ej.: \"Estoy teniendo dificultades\n  para consultar tu [identidad/saldo]. Voy a intentarlo nuevamente…\", espera y\n  reintenta una vez.\n- Si el segundo intento también falla: \"Estamos teniendo inconvenientes\n  técnicos para verificar tu información. Te vamos a comunicar con Servicio\n  General para continuar.\" y detén el flujo correspondiente.\n\n# Reglas de estilo\n- No avances al siguiente paso del flujo sin una respuesta clara del anterior.\n  Si la respuesta es ambigua, pide que confirme explícitamente con SÍ o NO.\n- Nunca reveles números de identificación, respuestas de otros usuarios, ni\n  detalles internos de las herramientas o del sistema.\n- La información de saldo, cuota o mora es estrictamente confidencial: solo\n  puedes consultarla y mostrarla DESPUÉS de una validación de identidad\n  exitosa en esta misma conversación. Nunca consultes ni muestres el saldo de\n  un id_cliente distinto al que se autenticó.\n- Nunca uses el nombre, username o cualquier dato del perfil de Telegram como\n  fuente de identidad — la única fuente válida es la tabla clientes.\n- Tus respuestas pueden convertirse a audio y leerse en voz alta. Evita\n  markdown, asteriscos, guiones de lista o símbolos — escribe en prosa\n  natural, como si lo estuvieras diciendo hablado."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        848,
+        208
+      ],
+      "id": "29a15e4f-d316-4445-ad95-4ce92066ef66",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        528
+      ],
+      "id": "a0efb8cb-7a3a-4afb-b83b-c62f3d4c8f82",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "s5lPp1KBT6Ksmx9h",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        816
+      ],
+      "id": "a4caedbc-305a-4486-b65b-e547b7486a9e",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "s5lPp1KBT6Ksmx9h",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "\"Úsala para responder\npreguntas sobre la Ley 1581 de 2012, consentimiento, datos sensibles, derechos del titular o\nsanciones.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        608
+      ],
+      "id": "e0f80647-6a02-4e23-9b9b-c4fecaf22c90",
+      "name": "buscar_normativa_habeas_data",
+      "credentials": {
+        "supabaseApi": {
+          "id": "gMI0l7kUyowILlvz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ 'caso2-' + $('Entrada').item.json.chat_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        656,
+        576
+      ],
+      "id": "31bd7bfe-3216-4091-a7e6-c4afdd6f8f6e",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "clientes",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "cedula",
+              "keyValue": "={{ $fromAI('cedula', 'Número de cédula proporcionado por el usuario para validar su identidad', 'string').replace(/[^0-9]/g, '') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        448
+      ],
+      "id": "981a7f0a-dcb6-43ec-af8a-2e6cd45f5d14",
+      "name": "validar_asociado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "gMI0l7kUyowILlvz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Registra en la base de datos si el usuario autorizó o no el tratamiento de sus datos personales según la Ley 1581. Llamar inmediatamente después de que el usuario responda con un SI o NO claro a la pregunta de consentimiento.",
+        "tableId": "consentimiento",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "chat_id",
+              "fieldValue": "={{ $('Entrada').item.json.chat_id }}"
+            },
+            {
+              "fieldId": "tipo_consentimiento",
+              "fieldValue": "habeas_data_ley_1581"
+            },
+            {
+              "fieldId": "canal",
+              "fieldValue": "telegram"
+            },
+            {
+              "fieldId": "aceptado",
+              "fieldValue": "={{ $fromAI('autorizo', 'true si el usuario autoriza el tratamiento de datos, false si no', 'boolean') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        624
+      ],
+      "id": "0551fbcb-900a-4629-b91a-82e42bd47a30",
+      "name": "registrar_consentimiento",
+      "credentials": {
+        "supabaseApi": {
+          "id": "gMI0l7kUyowILlvz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta el saldo total, cuota mensual, fecha de vencimiento y estado de mora de un cliente ya autenticado. Requiere el id_cliente obtenido previamente con validar_asociado, nunca la cédula.",
+        "operation": "get",
+        "tableId": "saldo",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_cliente",
+              "keyValue": "={{ $fromAI('id_cliente', 'ID interno del cliente (no la cédula), obtenido del resultado de la herramienta validar_asociado', 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        416
+      ],
+      "id": "a03f661f-f8a5-4d03-8ef7-7105ee79869b",
+      "name": "consultar_saldo",
+      "credentials": {
+        "supabaseApi": {
+          "id": "gMI0l7kUyowILlvz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select\n  (select aceptado from consentimiento\n   where chat_id = {{ $('Entrada').item.json.chat_id }}\n   order by created_at desc limit 1) as consentimiento_previo,\n  coalesce(ia.intentos, 0) as intentos,\n  ia.bloqueado_hasta\nfrom (select 1) dummy\nleft join intentos_autenticacion ia\n  on ia.chat_id = {{ $('Entrada').item.json.chat_id }};",
+        "options": {}
+      },
+      "id": "2a166f9b-ebd5-4b12-960c-c718d7b48a3e",
+      "name": "verificar_estado_usuario",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1296,
+        656
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into intentos_autenticacion (chat_id, intentos, bloqueado_hasta)\nvalues ({{ $('Entrada').item.json.chat_id }}, 1, null)\non conflict (chat_id) do update set\n  intentos = intentos_autenticacion.intentos + 1,\n  bloqueado_hasta = case when intentos_autenticacion.intentos + 1 >= 3\n                          then now() + interval '30 minutes'\n                          else intentos_autenticacion.bloqueado_hasta end,\n  updated_at = now()\nreturning intentos, bloqueado_hasta;",
+        "options": {}
+      },
+      "id": "01cad4a3-1010-4552-8489-8a5925949c9d",
+      "name": "registrar_intento_fallido_auth",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1504,
+        560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst msg = j.message || null;\nreturn [{ json: {\n  chat_id: String(j.chat_id ?? (msg && msg.chat && msg.chat.id)),\n  mensaje: j.mensaje ?? (msg && msg.text) ?? '',\n  canal:   j.canal ?? 'telegram',\n  message: msg\n}}];"
+      },
+      "id": "d6cf6db5-6b6d-4bed-a7ea-6469a07a87a5",
+      "name": "Entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "ecab1779-0076-499a-89b8-300f24221bce",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp-out",
+              "name": "respuesta",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "037e31ff-0512-4e76-bff8-37554e8d653a",
+      "name": "Salida",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        160
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "buscar_normativa_habeas_data",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_normativa_habeas_data": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar_asociado": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_consentimiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_saldo": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_estado_usuario": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_intento_fallido_auth": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "35683a33-dd43-4c9c-bf9c-d718b281af23",
+  "meta": {
+    "instanceId": "a3783c18c3519c756e43bac581efc13341db6183e0041566c00f4eb255bcd55d"
+  },
+  "nodeGroups": [],
+  "id": "UPtKAXG7gMkcBeyM",
+  "tags": []
+}

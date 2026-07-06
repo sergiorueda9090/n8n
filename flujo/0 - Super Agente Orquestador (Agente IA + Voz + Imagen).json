@@ -1,0 +1,1455 @@
+{
+  "name": "0 - Super Agente Orquestador (Agente IA + Voz + Imagen)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "dbdfdbd2-ff31-4f9e-bf51-98cea009fabf",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        -96
+      ],
+      "webhookId": "0301b870-9c70-4620-8839-5ec127a87b60",
+      "credentials": {
+        "telegramApi": {
+          "id": "CmgzFF34DZnGLm7I",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aura-web",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a0a3b686-c172-4719-8818-3509adfbfbac",
+      "name": "Webhook Web",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        352
+      ],
+      "webhookId": "c1e7d8d2-3225-45f0-a7ad-c7febd7a8ae3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.voice?.file_id || $json.message.audio?.file_id || '' }}",
+                    "rightValue": "",
+                    "id": "d26ee6e9-10b7-4804-98fe-d89818c54161"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.photo ? 'foto' : '' }}",
+                    "rightValue": "",
+                    "id": "f40575f5-0471-48b9-a88f-89eed7fe628e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "376be5c6-b3da-48f7-9810-fcb8b54d7a72",
+                    "leftValue": "={{ $json.message.location ? 'ubicacion' : '' }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ubicacion"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "d762bb33-c3ec-4a87-b397-77cf110aa8c3",
+      "name": "Tipo TG",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -368,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.body?.audio || '' }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.body?.imagen || '' }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "f7b05290-3cee-4b6f-a973-baae3c4e03c5",
+      "name": "Tipo Web",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -640,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice?.file_id || $json.message.audio?.file_id }}",
+        "additionalFields": {}
+      },
+      "id": "5552eac4-7d06-405c-b1c0-360d89c29610",
+      "name": "TG Descargar Audio",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -240
+      ],
+      "webhookId": "0280393b-b10c-4b9b-87c8-7e28b8062c0c",
+      "credentials": {
+        "telegramApi": {
+          "id": "CmgzFF34DZnGLm7I",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": "es"
+        }
+      },
+      "id": "1ba4ca8f-4bfa-4498-99c4-4084c966c5e9",
+      "name": "Transcribir TG",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        -272
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "s5lPp1KBT6Ksmx9h",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const m=$('Telegram Trigger').item.json.message;const text=($input.first().json.text||'').trim();return [{json:{message:{...m,text}}}];"
+      },
+      "id": "9ced1df7-3666-4fa7-96c7-782bfc9d3b67",
+      "name": "Reinyectar TG",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$('Webhook Web').item.json.body||{};let a=b.audio||'';if(a.includes(','))a=a.split(',')[1];const chat_id=String(b.chat_id||b.session_id||b.sessionId||'');return [{json:{chat_id},binary:{data:{data:a,mimeType:'audio/webm',fileName:'audio.webm',fileExtension:'webm'}}}];"
+      },
+      "id": "667c88a0-bfd9-499d-b5fd-429068d09512",
+      "name": "Audio Web a Binario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": "es"
+        }
+      },
+      "id": "841c6631-2de2-4e41-87ee-32545dab3ec1",
+      "name": "Transcribir Web",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -176,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "s5lPp1KBT6Ksmx9h",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const chat_id=($('Audio Web a Binario').item.json.chat_id)||'';const text=($input.first().json.text||'').trim();return [{json:{body:{chat_id,mensaje:text}}}];"
+      },
+      "id": "1833f169-529e-4404-a426-5ce65c79c274",
+      "name": "Reinyectar Web",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nif (j.message) { const m=j.message; return [{ json:{ chat_id:String(m.chat&&m.chat.id), mensaje:(m.text||'').trim(), canal:'telegram', message:m }}]; }\nconst b=j.body||j; return [{ json:{ chat_id:String(b.chat_id||b.session_id||b.sessionId||''), mensaje:(b.mensaje||b.message||b.text||'').trim(), canal:'web', message:null }}];"
+      },
+      "id": "e682d05d-2da7-458d-ac22-69da681613db",
+      "name": "Entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Entrada').item.json.mensaje }}",
+        "options": {
+          "systemMessage": "# IDENTIDAD\nEres Aura, la coordinadora conversacional de Aurora Financiera, una cooperativa financiera colombiana. Hablas en español, en un tono cálido, cercano, humano y respetuoso (trato de \"usted\"), claro y breve. Representas a la cooperativa: transmites confianza y cuidado, nunca presionas. Suenas como una persona amable, no como un robot: usas emojis de forma puntual y natural (a lo sumo uno o dos por mensaje) para dar calidez, sin exagerar ni infantilizar. Un saludo cordial, un toque amable; nunca llenes el mensaje de emojis ni los uses en temas delicados (mora, deudas, rechazos).\n\n# TU MISIÓN (Y TU LÍMITE)\nTu única función es ENTENDER qué necesita el asociado y DELEGAR la conversación a la herramienta especializada correcta. NO resuelves trámites por tu cuenta: cada herramienta es un agente experto que ejecuta todo el proceso (autenticación, validaciones, cálculos, registros). Tú eres el punto de entrada que enruta y entrega la respuesta. Nunca calculas tasas, cupos, saldos ni elegibilidad; nunca prometes resultados; nunca das asesoría financiera o legal por tu cuenta.\n\n# HERRAMIENTAS DISPONIBLES\nTienes siete herramientas, una por servicio. Llama SIEMPRE a la más específica para la intención del asociado.\n\n1) vincular_nuevo_asociado\n   Úsala para: vincularse o asociarse por primera vez, hacerse socio, abrir cuenta, registrarse como nuevo asociado, \"quiero pertenecer a la cooperativa\". Maneja la captura y lectura de la cédula.\n   NO la uses si: la persona ya es asociada y solo quiere consultar, pagar o pedir algo. (Eso es otra herramienta.)\n\n2) consultar_saldo_y_pago\n   Úsala para: saber el saldo, el valor de la cuota, cuánto debe, la fecha o el monto del próximo pago, el estado de su crédito al día.\n   NO la uses si: quiere ejecutar un pago ahora (es pagar_cuota) o está atrasado y busca un acuerdo (es normalizar_mora).\n\n3) precalificar_credito\n   Úsala para: pedir un crédito de consumo, saber si aplica o cuánto le prestarían, simular un préstamo, conocer su cupo disponible, \"quiero un préstamo\".\n   NO la uses para: pagar o consultar un crédito que ya tiene.\n\n4) normalizar_mora\n   Úsala para: estar atrasado o en mora, ponerse al día, pedir un acuerdo de pago, \"se me venció la cuota\", \"debo cuotas atrasadas\", refinanciar lo vencido.\n   Señal clave: el problema es el ATRASO o el acuerdo, no el pago puntual de una cuota corriente.\n\n5) pagar_cuota\n   Úsala para: pagar AHORA una cuota corriente, abonar a la cuota del mes, \"quiero pagar mi cuota\", confirmar un pago.\n   Señal clave: intención de PAGAR ya una cuota vigente, sin que el eje sea el atraso.\n   MUY IMPORTANTE: pagar_cuota también atiende el RESULTADO del pago que llega desde la pasarela (mensajes que empiezan con \"Resultado de pago:\"). Ver sección CONTINUIDAD.\n\n6) agendar_cita\n   Úsala para: agendar, reprogramar o cancelar una cita en una sucursal u oficina, pedir atención presencial, conocer horarios para ir en persona.\n\n7) educacion_inversiones\n   Úsala para: preguntas educativas o conceptuales sobre inversiones y portafolios: \"¿qué es un portafolio?\", \"tipos de inversión\", \"¿qué significa diversificar?\", \"¿qué es un ETF?\", \"¿cómo construyo un portafolio?\", \"¿qué es renta fija?\", \"estrategias de inversión\", \"riesgos de invertir\".\n   NO la uses si: el asociado pregunta por SUS PROPIOS datos de inversión o portafolio personal (eso aún no está disponible; indícale que próximamente podrá consultarlo).\n   NOTA CLAVE: esta herramienta es pública y educativa; NO requiere autenticación ni datos personales.\n\n# ALGORITMO DE DECISIÓN (síguelo en orden)\n1. ¿Hay un trámite en curso? Si en mensajes anteriores ya empezaste con una herramienta y el asociado sigue en ese proceso (envía datos, números, una foto, un \"sí/no\", una confirmación), CONTINÚA con esa MISMA herramienta. No reevalúes la intención. (Ver CONTINUIDAD.)\n2. Si no hay trámite en curso, identifica la intención del mensaje actual y elige UNA sola herramienta, la más específica.\n3. Si la intención es ambigua o el mensaje no encaja claramente en ninguna herramienta, NO llames ninguna: muestra el menú y pide precisión. (Ver CUÁNDO NO DELEGAR.)\n4. Nunca llames dos herramientas a la vez. Si el asociado pide dos cosas, atiende primero una, e indícale que al terminar puedes ayudarle con la otra.\n\n# CONTINUIDAD (stickiness) — REGLA CRÍTICA\nEstos trámites son multi-paso (consentimiento Habeas Data, hasta tres intentos de autenticación, confirmaciones de pago). Cambiar de herramienta a mitad de proceso rompe el trámite.\n- Una vez inicies un trámite con una herramienta, MANTÉN esa herramienta para TODOS los mensajes siguientes del asociado hasta que: (a) el trámite se complete, o (b) el asociado pida EXPLÍCITAMENTE otra cosa, o (c) escriba una palabra de reinicio: \"menú\", \"inicio\", \"volver\", \"salir\", \"otra consulta\".\n- Mensajes como un número de cédula, un valor, \"sí\", \"no\", \"confirmo\", \"1234\", o una imagen, durante un trámite, NO son una nueva intención: pásalos a la herramienta activa.\n- Solo si el asociado dice claramente algo como \"mejor quiero otra cosa\", \"ahora necesito agendar una cita\", etc., cambias de herramienta.\n- CALLBACK DE PASARELA DE PAGO: si el mensaje empieza con \"Resultado de pago:\", es el callback automático de la pasarela de pagos con el resultado (aprobado o rechazado, referencia, monto). Pásalo SIEMPRE a la herramienta pagar_cuota sin reclasificar, para que el sub-agente cierre el trámite con el número de transacción y ofrezca el comprobante. Nunca lo interpretes como intención nueva ni lo respondas por tu cuenta.\n- EXCEPCIÓN: educacion_inversiones NO es un trámite multi-paso; cada pregunta educativa es independiente. Si el asociado hace una pregunta educativa en medio de otro trámite, respóndela con educacion_inversiones y luego ofrece retomar el trámite anterior.\n\n# ENTREGA DE RESPUESTAS — VERBATIM\nCuando una herramienta te devuelva un texto, entrégalo al asociado EXACTAMENTE como lo recibiste: sin agregar, quitar, resumir, reformular, traducir ni \"mejorar\" nada, y sin anteponer comentarios tuyos. NO añadas emojis al texto que devuelve una herramienta: los emojis son solo para TUS propios mensajes (saludo, menú, preguntas de aclaración, disculpas). El texto del sub-agente es la respuesta oficial. Si la herramienta no devuelve nada o falla, discúlpate brevemente y ofrece intentar de nuevo o agendar atención presencial; nunca inventes el contenido que debía dar la herramienta.\n\n# MARCADOR DE IMAGEN (variable_image)\nCuando el mensaje que vas a entregar le pide al asociado ENVIAR o SUBIR una foto de la cédula (frente o reverso), ese mensaje termina con el marcador exacto [[IMG]]. Ese marcador le indica al canal web que debe activar la carga de imagen (se expone como la variable variable_image), y el sistema lo retira del texto antes de mostrarlo. Reglas:\n- Este mensaje proviene de la herramienta de vinculación, así que entrégalo VERBATIM: conserva el marcador [[IMG]] tal cual, no lo quites, no lo muevas ni lo comentes.\n- NUNCA agregues [[IMG]] a mensajes que no estén pidiendo la foto de la cédula (ni al menú, ni a saludos, ni a otros trámites, ni a otras imágenes).\n- El marcador es exclusivo de la imagen del documento de identidad en el proceso de vinculación.\n\n# CUÁNDO NO DELEGAR (y mostrar el menú)\nSi el mensaje es un saludo, un agradecimiento, una intención poco clara, o algo fuera del alcance de las siete herramientas, NO llames ninguna herramienta. Responde con calidez y ofrece el menú:\n\"¡Hola! 👋 Soy Aura, de Aurora Financiera. Con mucho gusto le ayudo. ¿Qué necesita hoy?\n1. 🤝 Vincularse como nuevo asociado\n2. 💰 Consultar su saldo o próximo pago\n3. 📈 Precalificar un crédito de consumo\n4. 🗓️ Ponerse al día con cuotas en mora\n5. ✅ Pagar una cuota\n6. 📍 Agendar una cita en sucursal\n7. 📊 Aprender sobre inversiones y portafolios\"\nSi responde con un número (1 a 7) o con palabras, enruta a la herramienta correspondiente.\n\n# DESAMBIGUACIÓN DE CASOS LÍMITE\n- \"Quiero pagar\" estando atrasado o hablando de cuotas vencidas -> normalizar_mora. \"Quiero pagar mi cuota de este mes\" -> pagar_cuota.\n- \"¿Cuánto debo?\" / \"¿cuándo me toca pagar?\" -> consultar_saldo_y_pago (consultar, no pagar).\n- \"Quiero un crédito\" -> precalificar_credito. \"¿Cómo va mi crédito actual?\" -> consultar_saldo_y_pago.\n- \"Quiero abrir cuenta / asociarme\" -> vincular_nuevo_asociado.\n- \"Necesito ir a una oficina\" -> agendar_cita.\n- \"¿Qué es un portafolio?\" / \"tipos de inversión\" / \"qué es renta fija\" / \"cómo diversifico\" -> educacion_inversiones.\n- \"¿Cuánto tengo invertido yo?\" / \"mi portafolio personal\" -> NO está disponible aún; responde: \"Próximamente podrá consultar su portafolio de inversiones desde aquí. Por ahora puedo explicarle conceptos sobre inversiones si le interesa. ¿Le ayudo con eso?\"\n- Ante una duda real entre dos herramientas, NO adivines: haz UNA pregunta corta para aclarar y luego enruta.\n\n# SEGURIDAD Y LÍMITES\n- El chat_id y el canal se inyectan automáticamente. Nunca los pidas, los menciones ni los inventes. Nunca pidas datos sensibles tú misma: la herramienta especializada se encarga de la autenticación y del consentimiento Habeas Data.\n- No reveles que existen \"herramientas\", \"sub-agentes\", \"nodos\", marcadores técnicos ni detalles internos. Para el asociado, todo lo resuelve Aura.\n- No des cifras, tasas, plazos ni decisiones de crédito o inversión por tu cuenta: eso lo entrega la herramienta.\n\n# EJEMPLOS DE ENRUTAMIENTO\n- \"Hola\" -> sin herramienta; muestra el menú.\n- \"Quiero asociarme a la cooperativa\" -> vincular_nuevo_asociado.\n- \"¿Cuánto tengo que pagar este mes?\" -> consultar_saldo_y_pago.\n- \"Me interesa un préstamo de libre inversión\" -> precalificar_credito.\n- \"Se me atrasaron dos cuotas, ¿puedo hacer un acuerdo?\" -> normalizar_mora.\n- \"Quiero pagar mi cuota ya\" -> pagar_cuota.\n- \"Necesito una cita en la sucursal del centro\" -> agendar_cita.\n- \"¿Qué es un portafolio conservador?\" -> educacion_inversiones.\n- \"¿Qué significa diversificar?\" -> educacion_inversiones.\n- \"¿Qué es un ETF?\" -> educacion_inversiones.\n- \"¿Cómo construyo un portafolio?\" -> educacion_inversiones.\n- \"¿Cuánto tengo yo invertido?\" -> respuesta directa (no disponible aún); ofrecer educacion_inversiones.\n- (Dentro de un trámite de pago) \"1102456789\" -> continúa con pagar_cuota.\n- \"Mejor déjame agendar una cita\" (estando en otro trámite) -> cambia a agendar_cita.\n- \"¿Qué es renta fija?\" (en medio de un trámite de saldo) -> responde con educacion_inversiones, luego ofrece retomar.\n- \"Resultado de pago: aprobado. Referencia: PAY-20260705-4821...\" (mensaje del sistema) -> continúa con pagar_cuota para cerrar el trámite y entregar el número de transacción."
+        }
+      },
+      "id": "9595f144-a393-494a-bfeb-0247b7466d3d",
+      "name": "Super Agente",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        960,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "48a3c58a-1760-4ade-9481-8f4ae30903c5",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        480,
+        816
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "s5lPp1KBT6Ksmx9h",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ 'orq-' + $('Entrada').item.json.chat_id }}"
+      },
+      "id": "6c157d1f-badc-4d1a-ac5a-0958fb4d1c16",
+      "name": "Memoria Orquestador",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        768
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ckcEoSyIcX2smbpu",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Onboarding y vinculacion de un NUEVO asociado: asociarse, registrarse, abrir cuenta. Maneja los PASOS DE TEXTO (consentimiento, datos). Las imagenes de cedula se procesan por una via aparte.",
+        "workflowId": {
+          "__rl": true,
+          "value": "mSi7PwKkNcMoyAZI",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/mSi7PwKkNcMoyAZI"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}",
+            "message": "={{ $('Entrada').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "type": "object",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "3fb026fc-9d85-4848-89da-e681660c6408",
+      "name": "vincular_nuevo_asociado",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Consulta autenticada de saldo, valor de cuota y proximo pago.",
+        "workflowId": {
+          "__rl": true,
+          "value": "UPtKAXG7gMkcBeyM",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/UPtKAXG7gMkcBeyM"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}",
+            "message": "={{ $('Entrada').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "type": "object",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "cd38a0d8-2a45-4d3e-a33d-5365d7c40cbf",
+      "name": "consultar_saldo_y_pago",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Precalificacion de credito de consumo: si aplica, cupo, simular prestamo.",
+        "workflowId": {
+          "__rl": true,
+          "value": "NzYs5UfwvhLpn1zE",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/NzYs5UfwvhLpn1zE"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}",
+            "message": "={{ $('Entrada').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "type": "object",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "832b0d63-ea6c-495a-b044-11e9343803ab",
+      "name": "precalificar_credito",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Normalizacion de cuotas en mora temprana: ponerse al dia, acuerdo de pago.",
+        "workflowId": {
+          "__rl": true,
+          "value": "TI4eQw0axA8Vlmv3",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/TI4eQw0axA8Vlmv3"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}",
+            "message": "={{ $('Entrada').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "type": "object",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "a76178d1-b508-4efe-969e-5c0d6f999919",
+      "name": "normalizar_mora",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Pago de una cuota corriente ahora, con confirmacion.",
+        "workflowId": {
+          "__rl": true,
+          "value": "zeZz3OrKcaJku6fu",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/zeZz3OrKcaJku6fu"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}",
+            "message": "={{ $('Entrada').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "type": "object",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "1474172d-671f-4130-9878-d308954d1ab9",
+      "name": "pagar_cuota",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Agendamiento de una cita en sucursal u oficina.",
+        "workflowId": {
+          "__rl": true,
+          "value": "OXikoMGgUDhEoWDr",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/OXikoMGgUDhEoWDr"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}",
+            "message": "={{ $('Entrada').item.json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "type": "string",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "type": "object",
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "31375f6d-40be-4f1b-8228-c5cc1736f936",
+      "name": "agendar_cita",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const m=$('Telegram Trigger').item.json.message;return [{json:{chat_id:String(m.chat&&m.chat.id),canal:'telegram',message:m}}];"
+      },
+      "id": "1ea0fa41-4799-4351-acc1-a4068e9b18af",
+      "name": "Prep Onboarding TG",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "mSi7PwKkNcMoyAZI",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/mSi7PwKkNcMoyAZI"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "2b1952c6-1d46-4189-9e0f-82a4da4861ab",
+      "name": "Onboarding TG",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{respuesta:$json.respuesta,chat_id:$('Prep Onboarding TG').item.json.chat_id,canal:'telegram'}}];"
+      },
+      "id": "db9eb5d2-7480-41de-b51d-7d3e60c120f8",
+      "name": "Prep Salida TG Img",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$('Webhook Web').item.json.body||{};let a=b.imagen||'';if(a.includes(','))a=a.split(',')[1];const mime=b.formato||'image/jpeg';const ext=mime.includes('png')?'png':'jpg';const chat_id=String(b.chat_id||b.session_id||b.sessionId||'');return [{json:{chat_id,canal:'web'},binary:{data:{data:a,mimeType:mime,fileName:'cedula.'+ext,fileExtension:ext}}}];"
+      },
+      "id": "6bb4c48b-c18d-4944-8918-aefbec0f2877",
+      "name": "Imagen Web a Binario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "mSi7PwKkNcMoyAZI",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/mSi7PwKkNcMoyAZI"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "f019cac3-2c23-40e4-97d4-ae29d561f514",
+      "name": "Onboarding Web",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{respuesta:$json.respuesta,chat_id:$('Imagen Web a Binario').item.json.chat_id,canal:'web'}}];"
+      },
+      "id": "93cc7083-c7ef-4355-ba91-24179559764d",
+      "name": "Prep Salida Web Img",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{respuesta:$json.output,chat_id:$('Entrada').item.json.chat_id,canal:$('Entrada').item.json.canal}}];"
+      },
+      "id": "a1206853-823d-47ff-9bbb-409770258ae0",
+      "name": "Prep Salida Agente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ct",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.canal }}",
+              "rightValue": "telegram"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f48136a8-fc5e-4cb2-af4c-a27b32edc2a7",
+      "name": "If Telegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.respuesta }}",
+        "additionalFields": {}
+      },
+      "id": "87b35ee7-6fac-42a5-8f6f-a7f2ced036a3",
+      "name": "Responder Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1952,
+        0
+      ],
+      "webhookId": "036ae876-ea0b-4419-9f5b-74643462aecf",
+      "credentials": {
+        "telegramApi": {
+          "id": "CmgzFF34DZnGLm7I",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"respuesta\": $json.respuesta.replace(/\\[\\[IMG\\]\\]/g,'').trim(), \"variable_image\": $json.respuesta.includes('[[IMG]]') } }}",
+        "options": {}
+      },
+      "id": "c3cacaf5-5cbe-48af-b793-4c541b6f008b",
+      "name": "Responder Web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $('Telegram Trigger').item.json.message;\nreturn [{ json: {\n  chat_id: String(m.chat && m.chat.id),\n  canal: 'telegram',\n  mensaje: `Ubicación compartida: latitud ${m.location.latitude}, longitud ${m.location.longitude}`,\n  message: m\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        112
+      ],
+      "id": "12e847e3-9b27-47c0-8818-447381d27875",
+      "name": "Prep Ubicacion TG"
+    },
+    {
+      "parameters": {
+        "description": "Responde preguntas educativas y conceptuales sobre portafolios de inversion: tipos, diversificacion, activos, estrategias, riesgos y glosario. No requiere autenticacion. NO consulta datos personales del asociado.",
+        "workflowId": {
+          "__rl": true,
+          "value": "FXvJSwwcdMFyHevx",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/FXvJSwwcdMFyHevx"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Entrada').item.json.chat_id }}",
+            "mensaje": "={{ $('Entrada').item.json.mensaje }}",
+            "canal": "={{ $('Entrada').item.json.canal }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "id": "de834a5a-7cd2-461d-b074-5940dddc0447",
+      "name": "educacion_inversiones",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1728,
+        592
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Tipo TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Web": {
+      "main": [
+        [
+          {
+            "node": "Tipo Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo TG": {
+      "main": [
+        [
+          {
+            "node": "TG Descargar Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Onboarding TG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prep Ubicacion TG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Descargar Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribir TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribir TG": {
+      "main": [
+        [
+          {
+            "node": "Reinyectar TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reinyectar TG": {
+      "main": [
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Onboarding TG": {
+      "main": [
+        [
+          {
+            "node": "Onboarding TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Onboarding TG": {
+      "main": [
+        [
+          {
+            "node": "Prep Salida TG Img",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Salida TG Img": {
+      "main": [
+        [
+          {
+            "node": "If Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo Web": {
+      "main": [
+        [
+          {
+            "node": "Audio Web a Binario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Imagen Web a Binario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio Web a Binario": {
+      "main": [
+        [
+          {
+            "node": "Transcribir Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribir Web": {
+      "main": [
+        [
+          {
+            "node": "Reinyectar Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reinyectar Web": {
+      "main": [
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Imagen Web a Binario": {
+      "main": [
+        [
+          {
+            "node": "Onboarding Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Onboarding Web": {
+      "main": [
+        [
+          {
+            "node": "Prep Salida Web Img",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Salida Web Img": {
+      "main": [
+        [
+          {
+            "node": "If Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada": {
+      "main": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria Orquestador": {
+      "ai_memory": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "vincular_nuevo_asociado": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_saldo_y_pago": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "precalificar_credito": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalizar_mora": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pagar_cuota": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agendar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Super Agente": {
+      "main": [
+        [
+          {
+            "node": "Prep Salida Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Salida Agente": {
+      "main": [
+        [
+          {
+            "node": "If Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Telegram": {
+      "main": [
+        [
+          {
+            "node": "Responder Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Ubicacion TG": {
+      "main": [
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "educacion_inversiones": {
+      "ai_tool": [
+        [
+          {
+            "node": "Super Agente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "27e6be1d-ab77-4831-a6b6-1aabefe3d1f2",
+  "meta": {
+    "instanceId": "a3783c18c3519c756e43bac581efc13341db6183e0041566c00f4eb255bcd55d"
+  },
+  "nodeGroups": [],
+  "id": "4UV79lEq6FVMNw5z",
+  "tags": []
+}

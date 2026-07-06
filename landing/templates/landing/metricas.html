@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Ejecutivo — Aurora Financiera</title>
+<title>Diseñador de métricas con IA — Aurora Financiera</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -28,28 +28,30 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 .tb-logo .ic{width:32px;height:32px;background:var(--af-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
 .tb-sub{font-size:.78rem;font-weight:500;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.08em;}
 .tb-spacer{flex:1;}
-.tb-back{color:rgba(255,255,255,.8);text-decoration:none;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid rgba(255,255,255,.25);border-radius:50px;transition:background .15s;}
-.tb-back:hover{background:rgba(255,255,255,.12);}
+.tb-link{color:rgba(255,255,255,.8);text-decoration:none;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid rgba(255,255,255,.25);border-radius:50px;transition:background .15s;}
+.tb-link:hover{background:rgba(255,255,255,.12);}
 
 /* ── WRAP ── */
 .wrap{max-width:1240px;margin:0 auto;padding:26px 22px 60px;}
 
-/* ── RESUMEN ── */
-.intro{margin-bottom:22px;}
-.intro h1{font-size:1.55rem;color:var(--af-primary);letter-spacing:-.01em;}
-.intro p{color:var(--af-gray);font-size:.95rem;margin-top:4px;max-width:760px;}
-.pills{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
-.pill{background:#fff;border:1px solid var(--af-border);border-radius:50px;padding:8px 16px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(11,61,107,.05);}
-.pill b{font-size:1.05rem;color:var(--af-primary);}
+/* ── HERO IA ── */
+.ai-hero{background:linear-gradient(135deg,var(--af-primary),var(--af-primary-dark));color:#fff;border-radius:var(--radius);padding:26px 28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.ai-hero::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(27,184,166,.35),transparent 70%);}
+.ai-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(27,184,166,.2);border:1px solid rgba(27,184,166,.4);color:#8ee9dd;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 12px;border-radius:50px;margin-bottom:14px;}
+.ai-hero h1{font-size:1.6rem;letter-spacing:-.01em;position:relative;}
+.ai-hero p{color:rgba(255,255,255,.8);font-size:.95rem;margin-top:8px;max-width:820px;position:relative;}
+.pills{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;position:relative;}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:8px 16px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:8px;}
+.pill b{font-size:1.05rem;}
 .pill .dot{width:9px;height:9px;border-radius:50%;}
 
 /* ── LEYENDA ── */
-.legend{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0 26px;padding:14px 18px;background:#fff;border:1px solid var(--af-border);border-radius:14px;}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 26px;padding:14px 18px;background:#fff;border:1px solid var(--af-border);border-radius:14px;}
 .legend-item{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--af-gray);font-weight:500;}
 .legend-item .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
 
-/* ── GRID DE KPIs ── */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px;}
 .card{background:#fff;border:1px solid var(--af-border);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(11,61,107,.06);}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;}
 .card.ok::before{background:var(--ok);}
@@ -68,7 +70,7 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 .card.naranja .k-value{color:var(--naranja);}
 .card.rojo .k-value{color:var(--rojo);}
 .k-value.nd{color:var(--gris);font-size:1.35rem;}
-.k-unit{font-size:1.1rem;font-weight:700;color:var(--af-gray-light);}
+.k-unit{font-size:1rem;font-weight:700;color:var(--af-gray-light);}
 
 .k-status{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:50px;font-size:.78rem;font-weight:700;align-self:flex-start;margin-bottom:12px;}
 .k-status.ok{background:var(--ok-soft);color:var(--af-accent-dark);}
@@ -81,51 +83,45 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
 .k-missing{font-size:.82rem;color:#556270;background:var(--gris-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;}
 .k-missing i{color:var(--gris);flex-shrink:0;margin-top:1px;}
 
+/* Cómo la diseñó la IA */
+.k-design{font-size:.82rem;color:var(--af-primary-dark);background:linear-gradient(135deg,rgba(27,184,166,.08),rgba(11,61,107,.05));border:1px solid rgba(27,184,166,.25);border-radius:10px;padding:11px 13px;margin-bottom:12px;display:flex;gap:9px;line-height:1.45;}
+.k-design i{color:var(--af-accent-dark);flex-shrink:0;margin-top:2px;font-size:.95rem;}
+.k-design .lbl{display:block;font-weight:700;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--af-accent-dark);margin-bottom:2px;}
+
 .k-meta{margin-top:auto;border-top:1px dashed var(--af-border);padding-top:12px;display:flex;flex-direction:column;gap:8px;}
 .k-row{font-size:.78rem;color:var(--af-gray);display:flex;gap:8px;}
 .k-row .lbl{font-weight:700;color:#26313D;flex-shrink:0;min-width:62px;}
 .k-formula{font-family:'Courier New',monospace;font-size:.74rem;background:var(--af-primary);color:#cfe6f5;padding:8px 10px;border-radius:8px;word-break:break-word;line-height:1.4;}
 
-/* ── INDICADOR DE NEGOCIO ── */
-.biz{margin-top:30px;background:linear-gradient(135deg,var(--af-primary),var(--af-primary-dark));color:#fff;border-radius:var(--radius);padding:24px 26px;display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
-.biz-ic{width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
-.biz-body{flex:1;min-width:220px;}
-.biz-tag{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.6);}
-.biz-name{font-family:'Poppins',sans-serif;font-weight:700;font-size:1.15rem;margin:2px 0 4px;}
-.biz-desc{font-size:.85rem;color:rgba(255,255,255,.75);max-width:520px;}
-.biz-value{text-align:right;}
-.biz-value b{font-family:'Poppins',sans-serif;font-weight:800;font-size:2.6rem;line-height:1;}
-.biz-value span{display:block;font-size:.82rem;color:rgba(255,255,255,.7);margin-top:4px;}
-
 .foot{margin-top:26px;font-size:.78rem;color:var(--af-gray-light);text-align:center;}
 
-@media(max-width:560px){
-  .grid{grid-template-columns:1fr;}
-  .biz-value{text-align:left;}
-}
+@media(max-width:560px){ .grid{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="tb-logo"><span class="ic"><i class="bi bi-shield-check"></i></span> Aurora Financiera</div>
-  <span class="tb-sub">Dashboard ejecutivo</span>
+  <span class="tb-sub">Diseñador de métricas con IA</span>
   <span class="tb-spacer"></span>
-  <a class="tb-back" href="{% url 'landing:metricas_disenador' %}"><i class="bi bi-stars"></i> Métricas con IA</a>
-  <a class="tb-back" href="{% url 'landing:home' %}"><i class="bi bi-arrow-left"></i> Volver al sitio</a>
+  <a class="tb-link" href="{% url 'landing:kpi_dashboard' %}"><i class="bi bi-speedometer2"></i> KPIs ejecutivos</a>
+  <a class="tb-link" href="{% url 'landing:home' %}"><i class="bi bi-arrow-left"></i> Volver al sitio</a>
 </div>
 
 <div class="wrap">
 
-  <div class="intro">
-    <h1>KPIs ejecutivos de la transformación</h1>
-    <p>Cada indicador mide una de las promesas del comité directivo. Los datos se
-       leen en vivo desde la base de datos. Si un indicador aún no tiene datos,
-       se muestra qué hace falta para poder calcularlo — sin cifras inventadas.</p>
+  <div class="ai-hero">
+    <span class="ai-badge"><i class="bi bi-stars"></i> Diseñadas con IA</span>
+    <h1>Métricas no estándar para Aurora</h1>
+    <p>Más allá de los KPIs clásicos, estas métricas fueron diseñadas con asistencia
+       de IA para cruzar señales que normalmente no se miran juntas: el esfuerzo del
+       asociado al conversar, el valor realmente recuperado en cobranza y la severidad
+       (no solo la cantidad) de la mora. Se calculan en vivo desde la base de datos;
+       si una tabla aún está vacía, se explica qué falta — sin cifras inventadas.</p>
     <div class="pills">
-      <span class="pill"><span class="dot" style="background:var(--ok)"></span><b>{{ con_datos }}</b> de {{ total_kpis }} con datos reales</span>
-      <span class="pill"><span class="dot" style="background:var(--rojo)"></span><b>{{ en_alerta }}</b> en alerta</span>
-      <span class="pill"><span class="dot" style="background:var(--gris)"></span><b>{{ sin_datos }}</b> pendientes de datos</span>
+      <span class="pill"><span class="dot" style="background:var(--ok)"></span><b>{{ resumen.con_datos }}</b> de {{ resumen.total }} con datos reales</span>
+      <span class="pill"><span class="dot" style="background:var(--rojo)"></span><b>{{ resumen.en_alerta }}</b> en alerta</span>
+      <span class="pill"><span class="dot" style="background:var(--gris)"></span><b>{{ resumen.sin_datos }}</b> pendientes de datos</span>
     </div>
   </div>
 
@@ -137,68 +133,56 @@ h1,h2,h3{font-family:'Poppins',sans-serif;}
   </div>
 
   <div class="grid">
-    {% for k in kpis %}
-    <div class="card {{ k.estado }}">
+    {% for m in metricas %}
+    <div class="card {{ m.estado }}">
       <div class="card-head">
         <div class="k-icon">
-          {% if k.icono == 'robot' %}<i class="bi bi-robot"></i>
-          {% elif k.icono == 'reloj' %}<i class="bi bi-clock-history"></i>
-          {% elif k.icono == 'megafono' %}<i class="bi bi-megaphone"></i>
-          {% elif k.icono == 'estrella' %}<i class="bi bi-star-fill"></i>
-          {% elif k.icono == 'documento' %}<i class="bi bi-file-earmark-text"></i>
-          {% else %}<i class="bi bi-cash-coin"></i>{% endif %}
+          {% if m.icono == 'friccion' %}<i class="bi bi-chat-dots"></i>
+          {% elif m.icono == 'cobranza' %}<i class="bi bi-cash-stack"></i>
+          {% elif m.icono == 'cartera' %}<i class="bi bi-heart-pulse"></i>
+          {% else %}<i class="bi bi-graph-up"></i>{% endif %}
         </div>
         <div>
-          <div class="k-num">KPI {{ k.num }}</div>
-          <div class="k-name">{{ k.nombre }}</div>
+          <div class="k-num">MÉTRICA {{ m.num }}</div>
+          <div class="k-name">{{ m.nombre }}</div>
         </div>
       </div>
 
       <div class="k-valuebar">
-        {% if k.disponible %}
-          <span class="k-value">{{ k.valor }}</span><span class="k-unit">{{ k.unidad }}</span>
+        {% if m.disponible %}
+          <span class="k-value">{{ m.valor }}</span><span class="k-unit">{{ m.unidad }}</span>
         {% else %}
           <span class="k-value nd">Sin datos aún</span>
         {% endif %}
       </div>
 
-      <span class="k-status {{ k.estado }}">
+      <span class="k-status {{ m.estado }}">
         <span class="dot" style="background:currentColor"></span>
-        {% if k.estado == 'ok' %}En objetivo
-        {% elif k.estado == 'naranja' %}Alerta naranja
-        {% elif k.estado == 'rojo' %}Alerta roja
+        {% if m.estado == 'ok' %}En objetivo
+        {% elif m.estado == 'naranja' %}Alerta naranja
+        {% elif m.estado == 'rojo' %}Alerta roja
         {% else %}Pendiente de datos{% endif %}
       </span>
 
-      {% if k.detalle %}<div class="k-detail">{{ k.detalle }}</div>{% endif %}
-      {% if not k.disponible and k.faltante %}
-        <div class="k-missing"><i class="bi bi-info-circle-fill"></i><span>{{ k.faltante }}</span></div>
+      {% if m.detalle %}<div class="k-detail">{{ m.detalle }}</div>{% endif %}
+      {% if not m.disponible and m.faltante %}
+        <div class="k-missing"><i class="bi bi-info-circle-fill"></i><span>{{ m.faltante }}</span></div>
       {% endif %}
 
+      <div class="k-design">
+        <i class="bi bi-stars"></i>
+        <span><span class="lbl">Cómo la diseñó la IA</span>{{ m.diseno }}</span>
+      </div>
+
       <div class="k-meta">
-        <div class="k-row"><span class="lbl">Umbral</span><span>{{ k.umbral }}</span></div>
-        <div class="k-row"><span class="lbl">Por qué</span><span>{{ k.por_que }}</span></div>
-        <div class="k-formula">{{ k.formula }}</div>
+        <div class="k-row"><span class="lbl">Umbral</span><span>{{ m.umbral }}</span></div>
+        <div class="k-formula">{{ m.formula }}</div>
       </div>
     </div>
     {% endfor %}
   </div>
 
-  <div class="biz">
-    <div class="biz-ic"><i class="bi bi-graph-down-arrow"></i></div>
-    <div class="biz-body">
-      <div class="biz-tag">Indicador de negocio · no es KPI operativo diario</div>
-      <div class="biz-name">Tasa de mora general</div>
-      <div class="biz-desc">Métrica de resultado que tarda meses en moverse. Se sigue como
-        contexto de negocio, no como alerta diaria. Meta sectorial de referencia: 9%.</div>
-    </div>
-    <div class="biz-value">
-      <b>{{ mora.valor }}%</b>
-      <span>{{ mora.en_mora }} en mora de {{ mora.total }} asociados con saldo</span>
-    </div>
-  </div>
-
-  <p class="foot">Aurora Financiera · Datos leídos en vivo desde la base de datos (Supabase).</p>
+  <p class="foot">Aurora Financiera · Métricas diseñadas con IA · Datos leídos en vivo desde la base de datos (Supabase).</p>
 
 </div>
 </body>

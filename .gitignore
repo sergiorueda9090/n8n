@@ -36,6 +36,9 @@ db.sqlite3
 # === Herramientas de desarrollo (config local de Claude Code) ===
 .claude/
 
+# === Auto-testing (informe generado por `manage.py run_autotests`) ===
+/autotest_report.json
+
 # === Sistema ===
 .DS_Store
 Thumbs.db

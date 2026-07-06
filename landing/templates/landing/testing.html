@@ -1,0 +1,366 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Auto-testing de flujos críticos — Aurora Financiera</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+:root{
+  --af-primary:#0B3D6B; --af-primary-dark:#082c4f; --af-primary-soft:#e7eef5;
+  --af-accent:#1BB8A6; --af-accent-dark:#149384; --af-bg-light:#F7FAFC;
+  --af-gray:#5C6B7A; --af-gray-light:#9AA7B4; --af-border:#DDE8F4;
+  --ok:#1BB8A6; --ok-soft:#e5f6f3;
+  --naranja:#F59E0B; --naranja-soft:#fdf1dc;
+  --rojo:#E5484D; --rojo-soft:#fce8e9;
+  --gris:#94A3B8; --gris-soft:#eef2f6;
+  --radius:18px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;}}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--af-bg-light);color:#26313D;-webkit-font-smoothing:antialiased;line-height:1.5;}
+h1,h2,h3{font-family:'Poppins',sans-serif;}
+
+/* TOPBAR */
+.topbar{background:var(--af-primary);color:#fff;padding:18px 26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.tb-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;}
+.tb-logo .ic{width:32px;height:32px;background:var(--af-accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.tb-sub{font-size:.78rem;font-weight:500;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.08em;}
+.tb-spacer{flex:1;}
+.tb-link{color:rgba(255,255,255,.8);text-decoration:none;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid rgba(255,255,255,.25);border-radius:50px;transition:background .15s;}
+.tb-link:hover{background:rgba(255,255,255,.12);}
+
+.wrap{max-width:1180px;margin:0 auto;padding:26px 22px 60px;}
+
+/* HERO */
+.ai-hero{background:linear-gradient(135deg,var(--af-primary),var(--af-primary-dark));color:#fff;border-radius:var(--radius);padding:26px 28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.ai-hero::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(27,184,166,.35),transparent 70%);}
+.ai-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(27,184,166,.2);border:1px solid rgba(27,184,166,.4);color:#8ee9dd;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:5px 12px;border-radius:50px;margin-bottom:14px;}
+.ai-hero h1{font-size:1.6rem;letter-spacing:-.01em;position:relative;}
+.ai-hero p{color:rgba(255,255,255,.82);font-size:.95rem;margin-top:8px;max-width:840px;position:relative;}
+.pills{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;position:relative;}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:50px;padding:8px 16px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:8px;}
+.pill b{font-size:1.05rem;}
+.pill .dot{width:9px;height:9px;border-radius:50%;}
+
+/* META ROW */
+.meta{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 24px;padding:14px 18px;background:#fff;border:1px solid var(--af-border);border-radius:14px;font-size:.82rem;color:var(--af-gray);}
+.meta b{color:#26313D;}
+.meta code{background:var(--af-bg-light);padding:2px 7px;border-radius:6px;font-size:.78rem;color:var(--af-primary);}
+
+/* DELTA banner */
+.delta{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:14px;margin-bottom:24px;font-size:.95rem;}
+.delta.baja{background:var(--ok-soft);border:1px solid var(--ok);color:#0d6c60;}
+.delta.sube{background:var(--rojo-soft);border:1px solid var(--rojo);color:#9c2b2f;}
+.delta.igual{background:var(--gris-soft);border:1px solid var(--gris);color:#4a5563;}
+.delta .big{font-family:'Poppins';font-size:1.6rem;font-weight:800;}
+
+h2.sec{font-size:1.15rem;margin:30px 0 14px;display:flex;align-items:center;gap:10px;}
+h2.sec .ic{color:var(--af-accent);}
+
+/* SUGGESTIONS */
+.sug{background:#fff;border:1px solid var(--af-border);border-left:4px solid var(--naranja);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.sug .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.sug .cid{font-family:'Poppins';font-weight:700;font-size:.9rem;color:var(--af-primary);}
+.sug .txt{font-size:.9rem;color:#37424E;}
+.sug .txt b{color:#26313D;}
+
+/* CASE CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;}
+.card{background:#fff;border:1px solid var(--af-border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(11,61,107,.05);}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;}
+.card.pasa::before{background:var(--ok);}
+.card.parcial::before{background:var(--naranja);}
+.card.falla::before{background:var(--rojo);}
+.card .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.cid{font-family:'Poppins';font-weight:700;font-size:.82rem;color:var(--af-gray);}
+.badge{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 9px;border-radius:50px;}
+.badge.pasa{background:var(--ok-soft);color:#0d6c60;}
+.badge.parcial{background:var(--naranja-soft);color:#8a5a06;}
+.badge.falla{background:var(--rojo-soft);color:#9c2b2f;}
+.badge.critico{background:var(--rojo-soft);color:#9c2b2f;}
+.badge.mayor{background:var(--naranja-soft);color:#8a5a06;}
+.badge.menor{background:var(--gris-soft);color:#4a5563;}
+.badge.dim{background:var(--af-primary-soft);color:var(--af-primary);}
+.card h3{font-size:1rem;margin:2px 0 6px;color:#1f2b38;}
+.card .flujo{font-size:.76rem;color:var(--af-gray-light);margin-bottom:12px;}
+.field{font-size:.84rem;margin-bottom:8px;}
+.field .lbl{font-weight:700;color:var(--af-gray);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px;}
+.field .val{color:#37424E;}
+.lat{font-size:.74rem;color:var(--af-gray-light);margin-top:6px;}
+.lat.alerta{color:var(--naranja);font-weight:600;}
+details{margin-top:10px;border-top:1px dashed var(--af-border);padding-top:10px;}
+details summary{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--af-primary);}
+.turn{margin-top:8px;font-size:.82rem;}
+.turn .u{color:var(--af-primary-dark);}
+.turn .a{color:#37424E;}
+.turn .err{color:var(--rojo);font-weight:600;}
+.turn .who{font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--af-gray-light);}
+
+/* EMPTY */
+.empty{background:#fff;border:1px solid var(--af-border);border-radius:var(--radius);padding:40px;text-align:center;}
+.empty .ic{font-size:2.6rem;color:var(--af-accent);}
+.empty h2{font-size:1.2rem;margin:12px 0 8px;}
+.empty p{color:var(--af-gray);max-width:640px;margin:0 auto 8px;}
+.empty pre{text-align:left;background:var(--af-primary-dark);color:#e6f0f8;padding:14px 16px;border-radius:12px;margin:18px auto 0;max-width:560px;overflow:auto;font-size:.85rem;}
+:focus-visible{outline:3px solid var(--af-accent);outline-offset:2px;}
+
+/* RUN button */
+.run-btn{position:relative;background:var(--af-accent);color:#04302b;border:none;border-radius:50px;padding:13px 26px;font-family:'Poppins';font-weight:700;font-size:.95rem;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:transform .12s,background .15s,box-shadow .15s;box-shadow:0 6px 18px rgba(27,184,166,.35);}
+.run-btn:hover{background:#25d4c0;transform:translateY(-1px);}
+.run-btn:disabled{opacity:.7;cursor:progress;transform:none;}
+.run-btn i{font-size:1.15rem;}
+.run-hint{display:inline-block;margin-left:14px;font-size:.8rem;color:rgba(255,255,255,.7);}
+
+/* OVERLAY de ejecución */
+.overlay{position:fixed;inset:0;background:rgba(8,44,79,.94);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:999;color:#fff;text-align:center;padding:24px;}
+.overlay.show{display:flex;}
+.spinner{width:64px;height:64px;border:6px solid rgba(255,255,255,.18);border-top-color:var(--af-accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:22px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.overlay h2{font-size:1.35rem;margin-bottom:10px;}
+.overlay p{color:rgba(255,255,255,.78);max-width:560px;font-size:.95rem;}
+.overlay .small{margin-top:14px;font-size:.82rem;color:rgba(255,255,255,.55);}
+/* progreso en vivo */
+.ov-progress{width:min(520px,86vw);height:8px;background:rgba(255,255,255,.15);border-radius:50px;overflow:hidden;margin:20px 0 8px;}
+.ov-bar{height:100%;width:0;background:var(--af-accent);border-radius:50px;transition:width .3s ease;}
+.ov-count{font-family:'Poppins';font-weight:700;font-size:.9rem;color:#8ee9dd;margin-bottom:14px;}
+.ov-list{list-style:none;width:min(560px,90vw);max-height:38vh;overflow-y:auto;text-align:left;margin:0;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);}
+.ov-list li{display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.07);animation:fade .25s ease;}
+.ov-list li:last-child{border-bottom:none;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.ov-list .cid{font-family:'Poppins';font-weight:700;color:rgba(255,255,255,.55);min-width:52px;font-size:.78rem;}
+.ov-list .tt{flex:1;color:rgba(255,255,255,.9);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ov-list .vd{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:50px;}
+.ov-list .vd.pasa{background:var(--ok-soft);color:#0d6c60;}
+.ov-list .vd.parcial{background:var(--naranja-soft);color:#8a5a06;}
+.ov-list .vd.falla{background:var(--rojo-soft);color:#9c2b2f;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo"><span class="ic"><i class="bi bi-shield-check"></i></span> Aurora Financiera</div>
+  <span class="tb-sub">Auto-testing · Garantía de calidad</span>
+  <span class="tb-spacer"></span>
+  <a class="tb-link" href="{% url 'landing:kpi_dashboard' %}"><i class="bi bi-graph-up"></i> KPIs</a>
+  <a class="tb-link" href="{% url 'landing:metricas_disenador' %}"><i class="bi bi-stars"></i> Métricas IA</a>
+  <a class="tb-link" href="{% url 'landing:home' %}"><i class="bi bi-house"></i> Inicio</a>
+</div>
+
+<div class="wrap">
+
+  <div class="ai-hero">
+    <span class="ai-badge"><i class="bi bi-robot"></i> Suite automatizada</span>
+    <h1>Pruebas automáticas de los flujos críticos</h1>
+    <p>{{ total_casos }} casos de prueba sobre los {{ flujos|length }} flujos conversacionales críticos
+       (onboarding, saldo, crédito, mora, pago, cita y escalamiento). Cada caso se ejecuta contra el
+       webhook real de n8n y se evalúa contra la rúbrica del reto: correctitud, Habeas&nbsp;Data, tono,
+       manejo de errores y accesibilidad.</p>
+    {% if hay_datos %}
+    <div class="pills">
+      <span class="pill"><span class="dot" style="background:var(--ok)"></span> Pasa <b>{{ actual.resumen.pasa }}</b></span>
+      <span class="pill"><span class="dot" style="background:var(--naranja)"></span> Parcial <b>{{ actual.resumen.parcial }}</b></span>
+      <span class="pill"><span class="dot" style="background:var(--rojo)"></span> Falla <b>{{ actual.resumen.falla }}</b></span>
+      <span class="pill"><i class="bi bi-exclamation-octagon"></i> Críticos <b>{{ actual.resumen.critico }}</b></span>
+      <span class="pill"><i class="bi bi-exclamation-triangle"></i> Mayores <b>{{ actual.resumen.mayor }}</b></span>
+      <span class="pill"><i class="bi bi-info-circle"></i> Menores <b>{{ actual.resumen.menor }}</b></span>
+    </div>
+    {% endif %}
+    <form method="post" action="{% url 'landing:run_autotests' %}" id="runForm" style="margin-top:20px;position:relative;">
+      {% csrf_token %}
+      <button type="submit" class="run-btn" id="runBtn">
+        <i class="bi bi-play-circle-fill"></i>
+        {% if hay_datos %}Ejecutar de nuevo (ciclo #{{ num_ciclos|add:1 }}){% else %}Ejecutar suite de pruebas{% endif %}
+      </button>
+      <span class="run-hint">Corre los {{ total_casos }} casos contra n8n · tarda 1–3 min</span>
+    </form>
+  </div>
+
+  {% if not hay_datos %}
+    <div class="empty">
+      <div class="ic"><i class="bi bi-clipboard-data"></i></div>
+      <h2>Aún no hay ciclos de testing</h2>
+      <p>Ejecuta la suite para generar el primer informe. Cada ejecución añade un ciclo;
+         aplica en n8n las mejoras que sugiera la IA y vuelve a correrla para ver la reducción de errores.</p>
+      <pre>source env/bin/activate
+python manage.py run_autotests</pre>
+    </div>
+  {% else %}
+
+    <div class="meta">
+      <span><b>Ciclo #{{ actual.numero }}</b> de {{ num_ciclos }}</span>
+      <span>Ejecutado: <b>{{ actual.timestamp }}</b></span>
+      <span>Evaluación:
+        {% if actual.modo_evaluacion == 'ia' %}<b>Juez IA (Claude)</b>{% else %}<b>Reglas (heurística)</b>{% endif %}
+      </span>
+      <span>Webhook: <code>{{ actual.webhook }}</code></span>
+    </div>
+
+    {% if previo %}
+      {% if delta_errores > 0 %}
+        <div class="delta baja">
+          <span class="big"><i class="bi bi-arrow-down-circle"></i> −{{ delta_errores }}</span>
+          <span>Reducción de hallazgos frente al ciclo #{{ previo.numero }}
+            ({{ previo.resumen.errores_total }} → {{ actual.resumen.errores_total }}). Las mejoras aplicadas funcionaron.</span>
+        </div>
+      {% elif delta_errores < 0 %}
+        <div class="delta sube">
+          <span class="big"><i class="bi bi-arrow-up-circle"></i> +{{ delta_errores|stringformat:"d"|cut:"-" }}</span>
+          <span>Aumentaron los hallazgos frente al ciclo #{{ previo.numero }}
+            ({{ previo.resumen.errores_total }} → {{ actual.resumen.errores_total }}). Revisar regresiones.</span>
+        </div>
+      {% else %}
+        <div class="delta igual">
+          <span class="big"><i class="bi bi-dash-circle"></i> =</span>
+          <span>Sin cambios en el número de hallazgos frente al ciclo #{{ previo.numero }}
+            ({{ actual.resumen.errores_total }}).</span>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="delta igual">
+        <span class="big"><i class="bi bi-flag"></i> 1</span>
+        <span>Primer ciclo de testing. Aplica las mejoras sugeridas abajo en n8n y vuelve a
+          ejecutar <code>run_autotests</code> para medir la reducción de errores.</span>
+      </div>
+    {% endif %}
+
+    {% if sugerencias %}
+    <h2 class="sec"><i class="bi bi-lightbulb ic"></i> Mejoras sugeridas por la IA ({{ sugerencias|length }})</h2>
+    {% for c in sugerencias %}
+      <div class="sug">
+        <div class="head">
+          <span class="cid">{{ c.id }}</span>
+          <span class="badge {{ c.veredicto }}">{{ c.veredicto }}</span>
+          {% if c.severidad != 'ninguna' %}<span class="badge {{ c.severidad }}">{{ c.severidad }}</span>{% endif %}
+          <span class="badge dim">{{ c.dimension }}</span>
+          <span style="font-size:.82rem;color:var(--af-gray)">{{ c.titulo }}</span>
+        </div>
+        <div class="txt"><b>Hallazgo:</b> {{ c.hallazgo }}</div>
+        <div class="txt"><b>Mejora:</b> {{ c.sugerencia }}</div>
+      </div>
+    {% endfor %}
+    {% else %}
+    <h2 class="sec"><i class="bi bi-check2-circle ic"></i> Sin hallazgos en este ciclo</h2>
+    <p style="color:var(--af-gray);font-size:.9rem;">Todos los casos pasaron. 🎉</p>
+    {% endif %}
+
+    <h2 class="sec"><i class="bi bi-list-check ic"></i> Detalle de los {{ actual.total_casos }} casos</h2>
+    <div class="grid">
+      {% for c in actual.casos %}
+      <div class="card {{ c.veredicto }}">
+        <div class="top">
+          <span class="cid">{{ c.id }}</span>
+          <span class="badge {{ c.veredicto }}">{{ c.veredicto }}</span>
+          {% if c.severidad != 'ninguna' %}<span class="badge {{ c.severidad }}">{{ c.severidad }}</span>{% endif %}
+          <span class="badge dim">{{ c.dimension }}</span>
+        </div>
+        <h3>{{ c.titulo }}</h3>
+        <div class="flujo">{{ c.flujo_nombre|default:c.flujo }} · {{ c.canal }}</div>
+
+        <div class="field"><span class="lbl">Hallazgo</span><span class="val">{{ c.hallazgo }}</span></div>
+        {% if c.veredicto != 'pasa' %}
+        <div class="field"><span class="lbl">Evidencia</span><span class="val">{{ c.evidencia }}</span></div>
+        <div class="field"><span class="lbl">Sugerencia</span><span class="val">{{ c.sugerencia }}</span></div>
+        {% endif %}
+
+        <div class="lat {% if c.alerta_latencia %}alerta{% endif %}">
+          <i class="bi bi-stopwatch"></i> Latencia máx: {{ c.latencia_max_ms }} ms · confianza {{ c.confianza }}
+        </div>
+
+        <details>
+          <summary>Ver conversación ({{ c.transcripcion|length }} turno{{ c.transcripcion|length|pluralize }})</summary>
+          {% for t in c.transcripcion %}
+          <div class="turn">
+            <div class="u"><span class="who">Usuario</span> {{ t.usuario }}</div>
+            {% if t.error %}
+              <div class="err"><span class="who">Error</span> {{ t.error }}</div>
+            {% else %}
+              <div class="a"><span class="who">Aurorita</span> {{ t.aurorita }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </details>
+      </div>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+
+</div>
+
+<div class="overlay" id="overlay" role="alert" aria-live="assertive">
+  <div class="spinner"></div>
+  <h2 id="ovTitle">Ejecutando la suite de pruebas…</h2>
+  <p id="ovSub">Se están corriendo los {{ total_casos }} casos contra el webhook de n8n y
+     evaluándolos con la IA. No cierres esta pestaña; al terminar verás el informe actualizado.</p>
+  <div class="ov-progress"><div class="ov-bar" id="ovBar"></div></div>
+  <div class="ov-count" id="ovCount">0 / {{ total_casos }}</div>
+  <ul class="ov-list" id="ovList"></ul>
+  <p class="small">Esto suele tardar entre 1 y 3 minutos.</p>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('runForm');
+    if (!form || typeof EventSource === 'undefined') return;  // sin JS/SSE: POST normal
+
+    var STREAM_URL = "{% url 'landing:run_autotests_stream' %}";
+    var REPORT_URL = "{% url 'landing:testing_report' %}";
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();  // usamos streaming en vez del POST bloqueante
+      var btn = document.getElementById('runBtn');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Ejecutando…'; }
+
+      var overlay = document.getElementById('overlay');
+      var bar = document.getElementById('ovBar');
+      var count = document.getElementById('ovCount');
+      var list = document.getElementById('ovList');
+      var title = document.getElementById('ovTitle');
+      var sub = document.getElementById('ovSub');
+      overlay.classList.add('show');
+
+      var es = new EventSource(STREAM_URL);
+
+      es.onmessage = function (msg) {
+        var d = JSON.parse(msg.data);
+
+        if (d.tipo === 'caso') {
+          bar.style.width = (d.i / d.total * 100) + '%';
+          count.textContent = d.i + ' / ' + d.total;
+          var li = document.createElement('li');
+          li.innerHTML = '<span class="cid">' + d.id + '</span>' +
+            '<span class="tt">' + d.titulo + '</span>' +
+            '<span class="vd ' + d.veredicto + '">' + d.veredicto + '</span>';
+          list.appendChild(li);
+          list.scrollTop = list.scrollHeight;
+
+        } else if (d.tipo === 'fin') {
+          es.close();
+          title.textContent = '¡Pruebas completadas! (ciclo #' + d.numero + ')';
+          sub.textContent = 'Pasa ' + d.resumen.pasa + ' · Parcial ' + d.resumen.parcial +
+            ' · Falla ' + d.resumen.falla + '. Cargando el informe…';
+          bar.style.width = '100%';
+          setTimeout(function () { window.location.href = REPORT_URL; }, 1200);
+
+        } else if (d.tipo === 'error') {
+          es.close();
+          title.textContent = 'Ocurrió un error durante la ejecución';
+          sub.textContent = d.mensaje;
+        }
+      };
+
+      es.onerror = function () {
+        // Si el stream ya terminó (fin) esto no dispara; si falla la conexión, avisamos.
+        es.close();
+        if (title.textContent.indexOf('completadas') === -1) {
+          title.textContent = 'Se perdió la conexión con el servidor';
+          sub.textContent = 'Revisa que el servidor siga corriendo y vuelve a intentar.';
+        }
+      };
+    });
+  })();
+</script>
+</body>
+</html>

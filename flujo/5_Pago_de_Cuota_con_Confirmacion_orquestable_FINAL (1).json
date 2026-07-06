@@ -1,0 +1,609 @@
+{
+  "name": "5. Pago de Cuota con Confirmacion (orquestable)",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Entrada').item.json.mensaje }}",
+        "options": {
+          "systemMessage": "# Rol\nEres Aura, la asistente virtual de pago de cuota de Aurora Financiera, una cooperativa financiera colombiana. Hablas siempre en espanol, con trato de \"usted\", en un tono cordial, claro y profesional. Tus mensajes son breves (3 a 4 lineas) y calidos, con maximo uno o dos emojis (✅, 🙂, 🔒) cuando aporten valor.\n\nIMPORTANTE — Fecha actual: hoy es julio de 2026. Cualquier concepto de pago o descripcion debe usar el mes y ano actual (ej: \"Cuota credito julio 2026\"). NUNCA uses fechas del pasado.\n\n# Herramientas disponibles\n1. verificar_estado_usuario → Llamala SIEMPRE al inicio. Devuelve consentimiento_previo, intentos y bloqueado_hasta.\n2. registrar_consentimiento → Usala UNA sola vez, tras la respuesta SI/NO a la autorizacion.\n3. validar_asociado → Consulta si la cedula existe. Devuelve id_cliente, nombre_completo, email, telefono, direccion y ciudad.\n4. registrar_intento_fallido_auth → Llamala SIEMPRE que validar_asociado no encuentre la cedula. Devuelve intentos reales.\n5. consultar_cuota → Devuelve monto_total, monto_minimo, fecha_vencimiento y estado. Usa los valores EXACTOS que devuelva.\n6. procesar_pago → Genera el enlace de la pasarela. Le pasas SOLO estos 3 datos:\n     - cedula: la cedula del asociado autenticado.\n     - monto: numero entero sin decimales (ej: 185000, NO 185000.00).\n     - concepto: descripcion breve del pago con mes y ano actual (ej: \"Cuota credito julio 2026\").\n   Devuelve un texto con la URL del enlace, la referencia generada y el monto.\n7. registrar_pago → Llamala inmediatamente despues de procesar_pago para dejar registro del intento.\n8. enviar_comprobante_sms → Envia el comprobante por SMS. Requiere:\n     - receiver: numero de celular colombiano con prefijo +57 (ej: +573143801560).\n     - message: texto del comprobante con la referencia del pago.\n9. enviar_comprobante_email → Envia el comprobante por email. Requiere:\n     - receiver: correo electronico valido.\n     - title: nombre completo del asociado (el que devolvio validar_asociado).\n\n# Regla de oro: consentimiento primero\nNo des ninguna informacion sobre la cuenta o la cuota antes de que el usuario autorice el tratamiento de sus datos (Ley 1581 de 2012). Si pregunta otra cosa antes, respondele que primero necesitas su autorizacion.\n\n# Identidad del usuario\nLa UNICA fuente valida del nombre es el campo nombre_completo que devuelve validar_asociado. GUARDA este nombre para usarlo despues en el envio del comprobante por email.\n\n# Validacion de identidad: maximo 3 intentos\nCualquier numero enviado en este punto es un nuevo intento. Siempre llama a validar_asociado; si no existe, siempre llama a registrar_intento_fallido_auth. Usa la frase EXACTA segun intentos:\n- intentos = 1 → \"El numero de identificacion no es correcto o no se encuentra registrado. Por favor verifiquelo. Le quedan 2 oportunidades.\"\n- intentos = 2 → \"El numero de identificacion no es correcto. Le queda 1 oportunidad.\"\n- intentos >= 3 → \"Por seguridad, su usuario quedo bloqueado temporalmente. Espere 30 minutos antes de volver a intentarlo.\" → No aceptes mas numeros.\n\n# Regla de oro: confirmacion explicita antes de generar el enlace\nElegir A) Pago total o B) Pago minimo NO es una confirmacion. Despues de la eleccion, SIEMPRE pregunta: \"¿Confirma el pago de $[monto elegido]? (Si/No)\".\n- NO → vuelve a mostrar las opciones A/B/C.\n- C) Cancelar → \"Entendido, no procesamos ningun pago. Si cambia de opinion, aqui estare.\" y termina.\n\n# Como responder cuando procesar_pago devuelve el enlace\nLa herramienta procesar_pago devuelve un texto con la URL y la referencia. Extrae la URL y entrega ESTE MENSAJE EXACTO al usuario:\n\n\"🔒 Su enlace de pago seguro esta listo:\n\n[URL]\n\nIngrese al enlace, revise el resumen del pago y confirme la transaccion en la pagina. Quedo atento(a) al resultado.\"\n\nLuego llama a registrar_pago para dejar registro del intento.\n\n# Manejo del RESULTADO de la pasarela\nCuando el usuario complete o cancele el pago, recibiras un mensaje automatico que EMPIEZA con \"Resultado de pago:\". Contiene estado (aprobado/rechazado), referencia, monto y cedula.\n\n## Si estado = rechazado:\n\"Su pago fue cancelado o no pudo procesarse.\nSi desea intentarlo nuevamente, digamelo y le generamos un nuevo enlace de pago.\"\n\n## Si estado = aprobado:\nGuarda la referencia y el monto para el comprobante. Responde:\n\n\"✅ ¡Su pago fue exitoso!\nNumero de transaccion: [referencia]\nMonto: $[monto]\n\n¿Como desea recibir su comprobante? Responda: SMS o EMAIL\"\n\n### Si el usuario elige SMS:\n\"Perfecto. ¿A que numero de celular se lo envio? (con prefijo +57, ejemplo: +573143801560)\"\n\nCuando el usuario proporcione el numero, VALIDA que:\n- Empiece con +57\n- Tenga 12 caracteres en total (+57 + 10 digitos)\n\nSi no cumple el formato: \"El numero no tiene el formato correcto. Por favor envielo con prefijo +57 seguido de 10 digitos, ejemplo: +573143801560\"\n\nSi es valido: llama a enviar_comprobante_sms con:\n- receiver = el numero validado\n- message = \"Hemos recibido su pago con exito. Su transaccion [referencia] por $[monto] fue procesada correctamente. Gracias por confiar en Aurora Financiera.\"\n\nLuego confirma:\n\"Le enviamos el comprobante a [numero]. ¡Gracias por su pago! 🙂\"\n\n### Si el usuario elige EMAIL:\n\"Perfecto. ¿A que correo electronico se lo envio?\"\n\nCuando el usuario proporcione el email, VALIDA que:\n- Contenga @\n- Tenga un dominio con punto (ej: .com, .co)\n\nSi no cumple: \"El correo no tiene el formato correcto. Por favor envielo asi: nombre@dominio.com\"\n\nSi es valido: llama a enviar_comprobante_email con:\n- receiver = el email validado\n- title = el nombre_completo del asociado que devolvio validar_asociado\n\nLuego confirma:\n\"Le enviamos el comprobante a [email]. ¡Gracias por su pago! 🙂\"\n\n# Flujo obligatorio (resumen)\n1. Primer mensaje → verificar_estado_usuario. Si bloqueado_hasta es futura: informa el bloqueo, no continues.\n2. Saludo cordial identificandote como Aura.\n3. Si consentimiento_previo=true, pasa al paso 5. Si no: \"Para atenderle necesito su autorizacion para tratar sus datos personales segun la Ley 1581 de 2012. ¿Autoriza el tratamiento de sus datos? (SI/NO)\"\n4. Registra el consentimiento. Si NO, despidete y termina.\n5. Solicita la cedula.\n6. validar_asociado. Si existe: guarda id_cliente, cedula y nombre_completo. Si no: registrar_intento_fallido_auth.\n7. consultar_cuota. Presenta: \"Su cuota pendiente es de $[monto_total] con vencimiento el [fecha_vencimiento]. ¿Como desea pagar? A) Pago total ($[monto_total])  B) Pago minimo ($[monto_minimo])  C) Cancelar\"\n8. Segun eleccion → confirmacion explicita SI/NO.\n9. Si SI: \"Generando su enlace de pago seguro...\" y llama a procesar_pago con cedula, monto (entero) y concepto (con mes y ano actual).\n10. Entrega el enlace verbatim segun el bloque \"Como responder cuando procesar_pago devuelve el enlace\".\n11. Llama a registrar_pago inmediatamente.\n12. Cuando llegue \"Resultado de pago:\", responde segun el bloque \"Manejo del RESULTADO de la pasarela\".\n13. Segun la eleccion SMS/EMAIL, pide y valida el dato, y llama a la herramienta correspondiente.\n\n# Manejo de errores tecnicos\n- Si validar_asociado o consultar_cuota fallan: avisa y reintenta una vez. Si vuelve a fallar: escala a Servicio General.\n- Si procesar_pago devuelve la URL correctamente, es EXITO — nunca lo interpretes como error.\n- Si enviar_comprobante_sms o enviar_comprobante_email fallan: \"Tuvimos un problema al enviar el comprobante. Puede consultarlo en la app o pedirlo en la sucursal.\"\n\n# Reglas de estilo\n- No avances sin respuesta clara del paso anterior.\n- No reveles cedulas, detalles internos ni datos de otros usuarios.\n- Nunca inventes montos, referencias, URLs, telefonos ni correos: usalos EXACTAMENTE como los devuelven las herramientas o el usuario.\n- El monto SIEMPRE es un numero entero sin decimales (185000, no 185000.00).\n- Las fechas y conceptos SIEMPRE reflejan el mes y ano actual (julio 2026)."
+        }
+      },
+      "id": "8e1f9fdb-e7ab-4ebc-873a-69dfc7c9efb8",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1440,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "id": "f0fa4c56-511f-4c24-bee3-c48973c931fc",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        864,
+        544
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "FzFOT6Hcns48GE0A",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ 'pago-' + $('Entrada').item.json.chat_id }}"
+      },
+      "id": "6a331f98-4417-4eb0-abd2-8398c012bda6",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        592
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Llamar SIEMPRE al inicio de la conversacion, antes de pedir consentimiento o numero de identificacion. No requiere parametros del modelo. Devuelve si el usuario ya autorizo Habeas Data (consentimiento_previo) y si esta bloqueado por intentos fallidos (intentos, bloqueado_hasta).",
+        "operation": "executeQuery",
+        "query": "SELECT\n  (SELECT aceptado FROM consentimiento WHERE chat_id = $1 ORDER BY created_at DESC LIMIT 1) AS aceptado,\n  (SELECT intentos FROM intentos_autenticacion WHERE chat_id = $1) AS intentos,\n  (SELECT bloqueado_hasta FROM intentos_autenticacion WHERE chat_id = $1) AS bloqueado_hasta",
+        "options": {
+          "queryReplacement": "={{ [String($('Entrada').item.json.chat_id)] }}"
+        }
+      },
+      "id": "cb5e9ad7-e11d-47b4-93fa-e5879d5a6f1b",
+      "name": "verificar_estado_usuario",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        2368,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usar EXACTAMENTE una vez, justo despues de que el usuario responda SI o NO a la pregunta de autorizacion de datos (solo si no tenia consentimiento_previo=true).",
+        "operation": "executeQuery",
+        "query": "INSERT INTO consentimiento (tipo_consentimiento, canal, aceptado, chat_id, created_at)\nVALUES ('habeas_data', $3, $1, $2, now())\nRETURNING id",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('aceptado','true si autorizo, false si no','boolean'), String($('Entrada').item.json.chat_id), $('Entrada').item.json.canal] }}"
+        }
+      },
+      "id": "1ac1e550-aafd-40e1-bae3-e79d8b23a177",
+      "name": "registrar_consentimiento",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        2144,
+        560
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta si un numero de identificacion existe en la base de clientes, solo despues de tener consentimiento positivo. Devuelve id_cliente, nombre_completo, email, telefono, direccion y ciudad si existe.",
+        "operation": "executeQuery",
+        "query": "SELECT id, nombre_completo, email, telefono, direccion, ciudad\nFROM clientes\nWHERE cedula = $1\nLIMIT 1",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('numero_identificacion', 'Numero de cedula que dio el usuario, solo digitos, sin puntos ni espacios', 'string')] }}"
+        }
+      },
+      "id": "834e0b97-b47a-4cad-bd4a-39e59bbc87ef",
+      "name": "validar_asociado",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        2016,
+        704
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Llamar SIEMPRE que validar_asociado no encuentre el numero de identificacion, sin excepcion, incluso si el numero es igual al intento anterior. Devuelve el numero real de intentos y si quedo bloqueado por 30 minutos.",
+        "operation": "executeQuery",
+        "query": "INSERT INTO intentos_autenticacion (chat_id, intentos, bloqueado_hasta, updated_at)\nVALUES ($1, 1, NULL, now())\nON CONFLICT (chat_id) DO UPDATE\nSET intentos = intentos_autenticacion.intentos + 1,\n    bloqueado_hasta = CASE WHEN intentos_autenticacion.intentos + 1 >= 3\n                            THEN now() + interval '30 minutes'\n                            ELSE NULL END,\n    updated_at = now()\nRETURNING intentos, bloqueado_hasta",
+        "options": {
+          "queryReplacement": "={{ [String($('Entrada').item.json.chat_id)] }}"
+        }
+      },
+      "id": "6ae64b08-b6d3-474c-a716-db7599e143d4",
+      "name": "registrar_intento_fallido_auth",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1808,
+        640
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usar justo despues de autenticar al asociado. Devuelve monto_total (la cuota pendiente completa), monto_minimo (un pago parcial valido), fecha_vencimiento y estado. Usa estos valores exactos al presentar las opciones de pago.",
+        "operation": "executeQuery",
+        "query": "SELECT\n  cuota_mensual AS monto_total,\n  ROUND(cuota_mensual / 2, -4) AS monto_minimo,\n  fecha_vencimiento,\n  estado\nFROM saldo\nWHERE id_cliente = $1\nORDER BY fecha_consulta DESC\nLIMIT 1",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('id_cliente', 'id_cliente devuelto por validar_asociado en este mismo flujo, nunca lo inventes ni lo pidas de nuevo', 'number')] }}"
+        }
+      },
+      "id": "237a13ac-545f-4159-bc02-ed8a4d378565",
+      "name": "consultar_cuota",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1312,
+        816
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "procesar_pago",
+        "description": "Genera el enlace seguro de la pasarela de pagos de Aurora Financiera. Usar SOLO despues de que el usuario haya confirmado con SI el pago. Recibe cedula, monto (numero entero sin decimales) y concepto (descripcion breve del mes y ano actual). Devuelve un texto con la URL del enlace y la referencia generada.",
+        "language": "javaScript",
+        "jsCode": "// Datos del AI\nconst cedula = query.cedula;\nconst monto = String(query.monto).split('.')[0];\nconst concepto = query.concepto;\n\n// Datos deterministicos del flujo\nconst chat_id = $('Entrada').first().json.chat_id;\nconst canal = $('Entrada').first().json.canal;\nconst callback_url = 'https://sruedagoat.app.n8n.cloud/webhook/aura-web';\n\n// Referencia unica generada aqui\nconst hoy = new Date();\nconst fecha = hoy.getFullYear() + String(hoy.getMonth() + 1).padStart(2, '0') + String(hoy.getDate()).padStart(2, '0');\nconst random = Math.floor(1000 + Math.random() * 9000);\nconst referencia = 'PAY-' + fecha + '-' + random;\n\n// Construir URL\nconst url = 'https://sruedadev.com/pago/?' +\n  'chat_id=' + encodeURIComponent(chat_id) +\n  '&cedula=' + encodeURIComponent(cedula) +\n  '&monto=' + encodeURIComponent(monto) +\n  '&concepto=' + encodeURIComponent(concepto) +\n  '&referencia=' + encodeURIComponent(referencia) +\n  '&canal=' + encodeURIComponent(canal) +\n  '&callback_url=' + encodeURIComponent(callback_url);\n\n// El tool DEBE devolver un string\nreturn 'Enlace de pago generado exitosamente. URL: ' + url + ' | Referencia: ' + referencia + ' | Monto: ' + monto;",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"cedula\": \"1078912345\",\n  \"monto\": 175000,\n  \"concepto\": \"Cuota credito julio 2026\"\n}"
+      },
+      "id": "procesar-pago-tool",
+      "name": "procesar_pago",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Llamar SIEMPRE inmediatamente despues de procesar_pago, sin excepcion, tanto si el pago fue exitoso como si fallo. Pasale exactamente lo que devolvio procesar_pago, nunca inventes ni cambies estos valores.",
+        "operation": "executeQuery",
+        "query": "INSERT INTO pagos (chat_id, id_cliente, monto, tipo_pago, numero_transaccion, estado, created_at)\nVALUES ($1, $2, $3, $4, $5, $6, now())\nRETURNING id",
+        "options": {
+          "queryReplacement": "={{ [String($('Entrada').item.json.chat_id), $fromAI('id_cliente', 'id_cliente devuelto por validar_asociado en este mismo flujo', 'number'), $fromAI('monto', 'El mismo monto que se envio a procesar_pago', 'number'), $fromAI('tipo_pago', \"'total' o 'minimo', el mismo que se envio a procesar_pago\", 'string'), $fromAI('numero_transaccion', 'El numero_transaccion exacto que devolvio procesar_pago, o vacio si el pago fallo', 'string'), $fromAI('estado', \"'exitoso' o 'fallido', segun lo que devolvio procesar_pago\", 'string')] }}"
+        }
+      },
+      "id": "d69d182c-b15e-4569-a27e-056755759fc7",
+      "name": "registrar_pago",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1696,
+        848
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "QwL82CIzsn2nZmY0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Supuestos a confirmar\n- monto_total = cuota_mensual (la cuota pendiente completa, igual al numero que ya se menciona en Caso 4). monto_minimo = ROUND(cuota_mensual/2, -4): 50% redondeado a la decena de mil mas cercana (185.000 -> 90.000, igual al ejemplo del guion). Si tu regla de negocio real es otra (ej. un % fijo distinto, o un minimo absoluto), ajusta esta formula.\n- 'Usuario no confirmo' del diagrama NO es un cierre real: se implemento como un regreso al menu de opciones (paso 7), no como fin de conversacion.\n- El reintento de pago (1 vez, espera de unos segundos) se configura de forma NATIVA en las opciones retryOnFail / maxTries / waitBetweenTries del nodo HTTP Request Tool 'procesar_pago' — es determinista, el LLM nunca decide reintentar.\n- 'Pago procesado exitosamente' y 'Pago procesado en el reintento' generan el MISMO mensaje al usuario (igual que en el guion 5.1) — la diferencia es solo interna, no se distingue en la conversacion.\n- El envio real del comprobante por email/SMS NO esta implementado (no hay integracion de correo/SMS en este proyecto todavia) — solo se registra la preferencia del usuario en pagos.medio_comprobante. Falta conectar un nodo de envio real (SMTP / Twilio / etc.) como pendiente.\n- La URL y credenciales de 'procesar_pago' son un PLACEHOLDER (REPLACE_ME) — reemplazalas por tu pasarela real (PSE, Wompi, ePayco, etc.). Se asume que esa pasarela responde JSON con al menos {exito, numero_transaccion} — si tu pasarela usa otros nombres de campo, ajusta el toolDescription y el System Prompt, o normaliza la respuesta con un nodo Code intermedio.\n- Reutiliza el mismo gate de consentimiento + autenticacion + bloqueo de 3 intentos de los demas Casos. El diagrama de este Caso 5 no dibuja el paso de consentimiento porque asume continuidad desde el Caso 4 — en la practica, verificar_estado_usuario lo salta solo si consentimiento_previo ya es true.\n- Tabla nueva requerida: pagos (ver SQL entregado en el chat).\n- Despues de importar: reasigna credenciales (REPLACE_ME), no renombres los Tool nodes (deben coincidir exacto con el System Prompt).",
+        "height": 420,
+        "width": 440
+      },
+      "id": "19673368-368a-4345-b5c8-4d8a85d4365c",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        896,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst msg = j.message || null;\nreturn [{ json: {\n  chat_id: String(j.chat_id ?? (msg && msg.chat && msg.chat.id)),\n  mensaje: j.mensaje ?? (msg && msg.text) ?? '',\n  canal:   j.canal ?? 'telegram',\n  message: msg\n}}];"
+      },
+      "id": "70850043-b586-4846-96a3-14623bbae72f",
+      "name": "Entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "edd82323-1ab2-4607-94ba-1d644511217f",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "resp-out",
+              "name": "respuesta",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d056ff16-8b1d-4fd0-81cf-bb8ffcb2b052",
+      "name": "Salida",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2320,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Envia el comprobante de pago por SMS al numero de celular que el usuario proporcione. Usar SOLO cuando el pago haya sido aprobado y el usuario haya elegido SMS. Requiere numero de celular colombiano con prefijo +57 (ej: +573143801560) y la referencia del pago.",
+        "method": "POST",
+        "url": "https://botai.smartdataautomation.com/v2/massive-campaigns/sms/send_message/788",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "parametersBody": {
+          "values": [
+            {
+              "name": "receiver",
+              "valueProvider": "modelRequired",
+              "description": "Numero de celular colombiano con prefijo +57 (ej: +573143801560). El usuario lo proporciona explicitamente."
+            },
+            {
+              "name": "message",
+              "valueProvider": "modelRequired",
+              "description": "Mensaje del comprobante. Ejemplo: 'Hemos recibido su pago con exito. Su transaccion PAY-20260705-4728 fue procesada correctamente. Gracias por confiar en Aurora Financiera.'"
+            },
+            {
+              "name": "send_date",
+              "valueProvider": "fieldValue",
+              "value": "={{ new Date().toISOString() }}"
+            },
+            {
+              "name": "send_type",
+              "valueProvider": "fieldValue",
+              "value": "FS"
+            },
+            {
+              "name": "sms_flash",
+              "valueProvider": "fieldValue",
+              "value": "false"
+            },
+            {
+              "name": "sms_format",
+              "valueProvider": "fieldValue",
+              "value": "STANDARD"
+            },
+            {
+              "name": "tags_values",
+              "valueProvider": "fieldValue",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "id": "enviar-comprobante-sms-tool",
+      "name": "enviar_comprobante_sms",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        704
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR_CON_ID_DE_TU_CREDENCIAL_BEARER",
+          "name": "Aurora BotAI Bearer"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Envia el comprobante de pago por correo electronico al email que el usuario proporcione. Usar SOLO cuando el pago haya sido aprobado y el usuario haya elegido EMAIL. Requiere direccion de correo valida y el nombre del asociado autenticado.",
+        "method": "POST",
+        "url": "https://botai.smartdataautomation.com/v2/massive-campaigns/email/send_message/114",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "parametersBody": {
+          "values": [
+            {
+              "name": "receiver",
+              "valueProvider": "modelRequired",
+              "description": "Direccion de correo electronico del asociado. El usuario la proporciona explicitamente."
+            },
+            {
+              "name": "title",
+              "valueProvider": "modelRequired",
+              "description": "Nombre completo del asociado autenticado en este flujo (el que devolvio validar_asociado)."
+            },
+            {
+              "name": "subject",
+              "valueProvider": "fieldValue",
+              "value": "Comprobante de pago Aurora Financiera"
+            },
+            {
+              "name": "template",
+              "valueProvider": "fieldValue",
+              "value": "2570"
+            },
+            {
+              "name": "email_sender",
+              "valueProvider": "fieldValue",
+              "value": "noreply@smartdataautomation.com"
+            },
+            {
+              "name": "name_sender",
+              "valueProvider": "fieldValue",
+              "value": "Aurora Financiera"
+            },
+            {
+              "name": "send_date",
+              "valueProvider": "fieldValue",
+              "value": "={{ new Date().toISOString() }}"
+            },
+            {
+              "name": "params",
+              "valueProvider": "fieldValue",
+              "value": "=https://sruedadev.com/, {{ new Date().getFullYear() }}"
+            },
+            {
+              "name": "attachment",
+              "valueProvider": "fieldValue",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "id": "enviar-comprobante-email-tool",
+      "name": "enviar_comprobante_email",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1720,
+        704
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR_CON_ID_DE_TU_CREDENCIAL_BEARER",
+          "name": "Aurora BotAI Bearer"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_estado_usuario": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_consentimiento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar_asociado": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_intento_fallido_auth": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_cuota": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "procesar_pago": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_pago": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_comprobante_sms": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_comprobante_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "78ee9189-610a-458b-bc13-5e92f439c8e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d1b61a3ff43d19b8a3ef97903a846124065bd2dbbe29a1965bf42b556604c1b6"
+  },
+  "nodeGroups": [],
+  "id": "n0tqWHozXOpyT294",
+  "tags": []
+}

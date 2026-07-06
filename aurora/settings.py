@@ -111,6 +111,15 @@ SUPABASE_PUBLISHABLE_KEY  = config('SUPABASE_PUBLISHABLE_KEY',  default='')
 SUPABASE_SECRET_KEY       = config('SUPABASE_SECRET_KEY',       default='')
 SUPABASE_JWKS_URL         = config('SUPABASE_JWKS_URL',         default='')
 
+# Auto-testing — suite de pruebas sobre los flujos críticos (ver landing/autotesting.py)
+#   OPENAI_API_KEY : habilita el juez IA (OpenAI) que evalúa las respuestas y
+#                    sugiere mejoras. Si está vacío, la suite evalúa solo con reglas.
+#   AUTOTEST_MODEL : modelo de OpenAI usado por el juez.
+#   AUTOTEST_REPORT: ruta del JSON donde se acumulan los ciclos de testing.
+OPENAI_API_KEY  = config('OPENAI_API_KEY', default='')
+AUTOTEST_MODEL  = config('AUTOTEST_MODEL', default='gpt-4o')
+AUTOTEST_REPORT = config('AUTOTEST_REPORT', default=str(BASE_DIR / 'autotest_report.json'))
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
